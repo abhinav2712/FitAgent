@@ -60,10 +60,6 @@ behavior in code, change this file in the same commit.
 
 ## Current limitations (honest list)
 
-- ⚠️ **Seed-plan protein bug**: the default plan's Thu/Sun/Fri protein sums
-  (104/118/119g) are below the 120g floor, so *all* plan patches are currently
-  rejected by validation until the seed numbers are corrected (human decision —
-  see CODING_GUIDELINES §3). Logging + advice work fine meanwhile.
 - Replies take up to ~30s (worker polls comments on that interval).
 - Swiggy results are mock dishes until mcp.swiggy.com/builders approval.
 - Nightly/dinner crons run in one shared timezone (`USER_TZ`) for all users.

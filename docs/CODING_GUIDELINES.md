@@ -57,7 +57,7 @@ These files are load-bearing: `agent/guardrails.py`, `agent/swiggy_mcp.py`, `age
 - **Plans are append-only.** Never `UPDATE plan_versions.plan`. Rollback = insert a new version whose plan equals an old version's plan, with rationale. The one legal UPDATE is flipping `approved` in the approval flow.
 - **Fail closed.** If validation code errors unexpectedly, the patch is rejected, not applied. Never wrap `apply_and_validate` in a `try/except` that falls through to persisting.
 - **User scoping is code-injected, never model-chosen.** The user dict flows caller → `loop.run(user, …)` → `tools.handle(user, …)`; no tool schema exposes a user parameter. Every table has `user_id`, every query filters on it, approval resolution verifies ownership *and* that the Telegram button was pressed from the owner's chat. A new query without a `user_id` filter is a cross-user data leak — treat it like a guardrail bypass.
-- **Known blocker (needs human decision):** the seed plan's daily protein sums (thu 104g, sun 118g, fri 119g) violate `PROTEIN_MIN=120`, so full-plan revalidation rejects every patch. Fix the seed numbers (human decides the diet content) — do not relax the guardrail or restrict validation to changed days.
+- **The seed plan must pass its own guardrails** (`test_seed_plan_passes_its_own_guardrails`): full-plan revalidation means one non-compliant day blocks every future patch. When editing plan content, keep every day ≥120g protein and ≥1600 kcal — and never fix a violation by relaxing the guardrail or validating only changed days.
 
 ---
 

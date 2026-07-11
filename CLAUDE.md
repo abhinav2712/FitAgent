@@ -63,6 +63,3 @@ User-facing behavior contract: docs/CAPABILITIES.md — update it in the same co
   workout truth).
 - personal_tracker.html at repo root is the superseded standalone version; delete once
   the served app is verified on the phone.
-- Seed plan protein sums are 104–127g/day; thu/sun/fri fall below the 120g guardrail
-  floor, so apply_and_validate rejects EVERY patch until the seed numbers are fixed —
-  needs the human to decide corrected values (see docs/CODING_GUIDELINES.md §3).

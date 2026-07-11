@@ -28,3 +28,10 @@ def test_protein_floor_enforced():
 def test_structural_changes_need_human():
     assert requires_human_approval([{"op": "replace", "path": "/targets/kcal", "value": 1800}])
     assert not requires_human_approval([{"op": "replace", "path": "/meals/mon/items/0/kcal", "value": 850}])
+
+def test_seed_plan_passes_its_own_guardrails():
+    """apply_and_validate revalidates EVERY day, so a seed plan that violates a
+    floor makes all future patches unappliable. Empty patch = pure validation.
+    (Regression: thu/fri/sun protein once summed 104/119/118g — below the 120 floor.)"""
+    from app.seed_plan import PLAN_V1
+    apply_and_validate(PLAN_V1, [])

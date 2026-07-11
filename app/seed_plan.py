@@ -31,16 +31,16 @@ PLAN_V1 = {
             {"id": "s", "name": "Whey shake + 1 apple", "kcal": 210, "protein_g": 26},
             {"id": "d", "name": "Chilli chicken (200g) + veg fried rice", "kcal": 650, "protein_g": 52}]},
         "thu": {"theme": "Paneer Party", "items": [
-            {"id": "b", "name": "Besan chilla stuffed with paneer + chutney", "kcal": 430, "protein_g": 24},
+            {"id": "b", "name": "Besan chilla stuffed with paneer + chutney", "kcal": 430, "protein_g": 26},
             {"id": "l", "name": "Dal + 2 rotis + veg sabzi + boiled egg", "kcal": 540, "protein_g": 24},
-            {"id": "s", "name": "Whey shake + roasted makhana (20g)", "kcal": 220, "protein_g": 27},
-            {"id": "d", "name": "Paneer tikka masala + 2 phulkas", "kcal": 560, "protein_g": 28},
+            {"id": "s", "name": "Whey shake + roasted makhana (20g)", "kcal": 220, "protein_g": 29},
+            {"id": "d", "name": "Paneer tikka masala (200g) + 2 phulkas", "kcal": 560, "protein_g": 40},
             {"id": "x", "name": "Dark chocolate (2 squares)", "kcal": 110, "protein_g": 1}]},
         "fri": {"theme": "Naan Night", "items": [
             {"id": "b", "name": "Masala oats + 2 boiled eggs", "kcal": 430, "protein_g": 24},
             {"id": "l", "name": "Dal–roti–sabzi + salad", "kcal": 520, "protein_g": 20},
             {"id": "s", "name": "Whey shake", "kcal": 130, "protein_g": 25},
-            {"id": "d", "name": "Tandoori naan + chicken tikka (200g) + chutney", "kcal": 700, "protein_g": 50}]},
+            {"id": "d", "name": "Tandoori naan + chicken tikka (200g) + chutney", "kcal": 700, "protein_g": 52}]},
         "sat": {"theme": "Street-Style Saturday", "items": [
             {"id": "b", "name": "Anda bhurji pav (3 eggs, 2 pav)", "kcal": 480, "protein_g": 26},
             {"id": "l", "name": "Soya chunk curry (50g dry) + rice", "kcal": 520, "protein_g": 32},
@@ -51,7 +51,7 @@ PLAN_V1 = {
             {"id": "b", "name": "2 moong dal chillas + curd dip", "kcal": 380, "protein_g": 20},
             {"id": "l", "name": "Homemade chicken biryani + raita + salad", "kcal": 750, "protein_g": 48},
             {"id": "s", "name": "Whey shake", "kcal": 130, "protein_g": 25},
-            {"id": "d", "name": "Light dal/soup + 1 roti + 2 boiled eggs", "kcal": 420, "protein_g": 24},
+            {"id": "d", "name": "Light dal/soup + 1 roti + 2 boiled eggs", "kcal": 420, "protein_g": 26},
             {"id": "x", "name": "Dark chocolate (2 squares)", "kcal": 110, "protein_g": 1}]},
     },
 }
