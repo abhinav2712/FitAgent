@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"PLAN\\\\|useState\\\\|function App\\\\|createElement\\\\|htm\\\\b\\\\|html\\\\`\" /Users/abhinavkumar/Desktop/fitagent/personal_tracker.html)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(python3 -c \"import fastapi, sqlalchemy, pydantic_settings; print\\('deps ok'\\)\")",
+      "Bash(python3 -m venv /private/tmp/claude-501/-Users-abhinavkumar-Desktop-fitagent/223414ca-e238-4610-832b-0f1aad8b3f65/scratchpad/venv)",
+      "Bash(/private/tmp/claude-501/-Users-abhinavkumar-Desktop-fitagent/223414ca-e238-4610-832b-0f1aad8b3f65/scratchpad/venv/bin/pip install *)",
+      "Bash(/private/tmp/claude-501/-Users-abhinavkumar-Desktop-fitagent/223414ca-e238-4610-832b-0f1aad8b3f65/scratchpad/venv/bin/uvicorn app.main:app --port 8123)",
+      "Bash(/private/tmp/claude-501/-Users-abhinavkumar-Desktop-fitagent/223414ca-e238-4610-832b-0f1aad8b3f65/scratchpad/venv/bin/python -m pytest tests/ -v)",
+      "Bash(docker build *)",
+      "Bash(docker run *)",
+      "Bash(docker exec *)",
+      "Bash(pkill -f \"uvicorn app.main:app --port 8123\")",
+      "Bash(docker rmi *)",
+      "Bash(docker compose *)",
+      "Bash(curl -s -X POST localhost:8000/log/comment -H 'Content-Type: application/json' -d '{\"date\":\"2026-07-07\",\"text\":\"walked extra today, what should dinner be?\"}')",
+      "Bash(curl -s \"localhost:8000/log/chat?limit=5\")",
+      "Bash(python3 -m json.tool)"
+    ]
+  }
+}

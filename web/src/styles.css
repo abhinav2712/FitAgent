@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --ink: #0C1B24;
+  --card: #132836;
+  --card-up: #1A3344;
+  --line: rgba(242, 237, 227, 0.10);
+  --text: #F2EDE3;
+  --mute: #8DA6B0;
+  --saff: #F5A623;
+  --green: #79C293;
+  --red: #E07A5F;
+}
+
+* { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--ink); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+
+.vt-root { min-height: 100vh; background: var(--ink); color: var(--text); padding-bottom: 88px; }
+.vt-wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+.vt-hero { padding: 28px 0 18px; background: linear-gradient(180deg, rgba(245,166,35,0.08), transparent 70%); }
+.vt-kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--saff); }
+.vt-h1 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: clamp(26px, 6vw, 38px); line-height: 1.05; margin-top: 6px; }
+.vt-sub { color: var(--mute); font-size: 14px; margin-top: 6px; }
+.vt-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 14px; }
+.vt-cardtitle { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 17px; }
+.vt-gauge { margin-top: 14px; }
+.vt-gaugehead { display: flex; justify-content: space-between; align-items: baseline;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--mute); }
+.vt-gaugehead strong { color: var(--text); font-size: 15px; }
+.vt-bar { height: 10px; border-radius: 6px; background: rgba(255,255,255,0.07); margin-top: 6px; overflow: hidden; }
+.vt-fill { height: 100%; border-radius: 6px; transition: width .45s cubic-bezier(.22,1,.36,1); }
+.vt-item { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
+  background: transparent; border: 0; border-top: 1px solid var(--line); color: inherit;
+  padding: 13px 2px; cursor: pointer; font: inherit; }
+.vt-item:first-of-type { border-top: 0; }
+.vt-item:focus-visible { outline: 2px solid var(--saff); outline-offset: 2px; border-radius: 8px; }
+.vt-check { width: 24px; height: 24px; min-width: 24px; border-radius: 8px; border: 2px solid var(--mute);
+  display: grid; place-items: center; margin-top: 1px; transition: all .18s; font-size: 14px; }
+.vt-item.done .vt-check { background: var(--green); border-color: var(--green); color: var(--ink); }
+.vt-item.done .vt-name { color: var(--mute); text-decoration: line-through; }
+.vt-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--saff); }
+.vt-name { font-size: 15px; font-weight: 500; margin-top: 2px; line-height: 1.35; }
+.vt-macros { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--mute); margin-top: 3px; }
+.vt-tabs { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(12,27,36,0.92);
+  backdrop-filter: blur(12px); border-top: 1px solid var(--line); display: flex;
+  justify-content: center; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); z-index: 20; }
+.vt-tab { flex: 1; max-width: 200px; background: transparent; border: 0; color: var(--mute);
+  font: 600 13px 'IBM Plex Sans', sans-serif; padding: 10px 6px; border-radius: 12px; cursor: pointer; }
+.vt-tab.on { color: var(--ink); background: var(--saff); }
+.vt-tab:focus-visible { outline: 2px solid var(--saff); outline-offset: 2px; }
+.vt-pill { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); }
+.vt-guidebtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.vt-gbtn { border: 1px solid var(--line); background: var(--card); color: var(--mute);
+  font: 600 13px 'IBM Plex Sans', sans-serif; padding: 9px 14px; border-radius: 999px; cursor: pointer; }
+.vt-gbtn.on { color: var(--ink); border-color: transparent; }
+.vt-ex { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: center;
+  border-top: 1px solid var(--line); padding: 16px 0; }
+.vt-ex:first-of-type { border-top: 0; }
+.vt-illobox { background: var(--ink); border: 1px solid var(--line); border-radius: 12px; aspect-ratio: 3/2; padding: 6px; }
+.vt-scheme { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--saff); margin-top: 2px; }
+.vt-cue { color: var(--mute); font-size: 13.5px; line-height: 1.45; margin-top: 5px; }
+.vt-row { display: grid; grid-template-columns: 86px 1fr 64px 58px; gap: 10px; align-items: center;
+  border-top: 1px solid var(--line); padding: 11px 0; font-size: 13px; }
+.vt-row:first-of-type { border-top: 0; }
+.vt-mono { font-family: 'IBM Plex Mono', monospace; }
+.vt-weightin { background: var(--ink); border: 1px solid var(--line); color: var(--text);
+  font: 600 16px 'IBM Plex Mono', monospace; border-radius: 10px; padding: 10px 12px; width: 110px; }
+.vt-weightin:focus { outline: 2px solid var(--saff); }
+.vt-send { background: var(--saff); border: 0; color: var(--ink);
+  font: 600 13px 'IBM Plex Sans', sans-serif; padding: 10px 18px; border-radius: 10px;
+  cursor: pointer; margin-top: 10px; }
+.vt-send:disabled { opacity: 0.5; cursor: default; }
+
+/* Movement stat tiles */
+.vt-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.vt-stat { flex: 1; min-width: 130px; background: var(--ink); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px; }
+.vt-statnum { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 26px; margin-top: 4px; }
+
+/* Floating FitAgent chat */
+.vt-fab { position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom));
+  width: 54px; height: 54px; border-radius: 50%; border: 0; background: var(--saff);
+  font-size: 26px; line-height: 1; cursor: pointer; z-index: 30;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+.vt-fab:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.vt-chat-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35; }
+.vt-chat { position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 680px;
+  height: min(72vh, 620px); background: var(--card); border: 1px solid var(--line);
+  border-bottom: 0; border-radius: 20px 20px 0 0; z-index: 40;
+  display: flex; flex-direction: column;
+  padding: 14px 14px calc(10px + env(safe-area-inset-bottom)); }
+.vt-chat-head { display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.vt-chat-sub { color: var(--mute); font-size: 12.5px; margin-top: 3px; line-height: 1.4; }
+.vt-chat-close { background: transparent; border: 0; color: var(--mute); font-size: 18px;
+  cursor: pointer; padding: 4px 8px; }
+.vt-msgs { flex: 1; overflow-y: auto; padding: 12px 2px; display: flex;
+  flex-direction: column; gap: 10px; }
+.vt-msg { display: flex; flex-direction: column; }
+.vt-bubble { max-width: 85%; padding: 9px 12px; border-radius: 14px; font-size: 14px;
+  line-height: 1.45; white-space: pre-wrap; }
+.vt-bubble.user { align-self: flex-end; background: var(--saff); color: var(--ink);
+  border-bottom-right-radius: 4px; }
+.vt-bubble.agent { align-self: flex-start; background: var(--card-up);
+  border: 1px solid var(--line); border-bottom-left-radius: 4px; margin-top: 6px; }
+.vt-bubble.thinking { color: var(--mute); font-style: italic; }
+.vt-chat-inputrow { display: flex; gap: 8px; align-items: flex-end; padding-top: 10px;
+  border-top: 1px solid var(--line); }
+.vt-chat-inputrow textarea { flex: 1; min-height: 44px; max-height: 120px; resize: none;
+  background: var(--ink); border: 1px solid var(--line); color: var(--text);
+  border-radius: 10px; padding: 11px 12px; font: 400 14px 'IBM Plex Sans', sans-serif; }
+.vt-chat-inputrow textarea:focus { outline: 2px solid var(--saff); }
+
+@media (max-width: 460px) {
+  .vt-ex { grid-template-columns: 96px 1fr; gap: 10px; }
+  .vt-row { grid-template-columns: 74px 1fr 56px 50px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .vt-fill { transition: none; } }
