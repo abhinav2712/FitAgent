@@ -13,7 +13,7 @@ cp .env.example .env        # LLM: paid Claude API key, OR free local Ollama
                             # (ANTHROPIC_BASE_URL — see .env.example Option B)
 docker compose up --build
 # one command per person — creates the user, seeds their plan, prints their API token:
-docker compose exec api python -m app.create_user "Abhi" --chat-id 123456789
+docker compose exec api python -m app.create_user "Abhi" --chat-id 123456789 --profile "23M, 175cm, cutting 76->68kg"
 open http://localhost:8000  # V-Taper Log tracker — paste the token in the pairing screen
 # simulate the iPhone: see shortcuts/SHORTCUT_SETUP.md for a curl test payload
 # leave a comment for the agent (or tap the floating 🤖 chat in the tracker):

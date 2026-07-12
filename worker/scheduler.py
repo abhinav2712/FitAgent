@@ -10,7 +10,7 @@ from app.config import settings
 from app.db import SessionLocal
 from agent import loop, notify
 
-USER_COLS = "id, name, telegram_chat_id, tz, lat, lng"
+USER_COLS = "id, name, telegram_chat_id, profile, tz, lat, lng"
 
 def _all_users():
     db = SessionLocal()
@@ -37,12 +37,12 @@ def process_new_comments():
     try:
         rows = db.execute(text("""
             SELECT c.id AS comment_id, c.date, c.text,
-                   u.id, u.name, u.telegram_chat_id, u.tz, u.lat, u.lng
+                   u.id, u.name, u.telegram_chat_id, u.profile, u.tz, u.lat, u.lng
             FROM comments c JOIN users u ON u.id = c.user_id
             WHERE c.processed = false ORDER BY c.id LIMIT 5
         """)).mappings().all()
         for r in rows:
-            user = {k: r[k] for k in ("id", "name", "telegram_chat_id", "tz", "lat", "lng")}
+            user = {k: r[k] for k in ("id", "name", "telegram_chat_id", "profile", "tz", "lat", "lng")}
             print(f"[worker] processing comment {r['comment_id']} (user {user['name']}): {r['text'][:60]}")
             run_id, _ = loop.process_comment(user, r["comment_id"], str(r["date"]), r["text"])
             db.execute(text(

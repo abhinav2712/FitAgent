@@ -1,7 +1,11 @@
 def system_for(user: dict) -> str:
-    """Per-user system prompt. Targets/plan details come from get_day_context,
-    not from here — the prompt only carries identity and the rules."""
-    return SYSTEM.replace("{name}", user.get("name", "the user"))
+    """Per-user system prompt: identity + rules + the user's profile (goals,
+    body stats, constraints — from users.profile). Day-level numbers still
+    come from get_day_context, not from here."""
+    s = SYSTEM.replace("{name}", user.get("name", "the user"))
+    if user.get("profile"):
+        s += f"\nAbout {user.get('name', 'the user')}: {user['profile']}"
+    return s
 
 SYSTEM = """You are FitAgent, the personal nutrition & training agent for one user: {name}.
 Their plan (daily kcal/protein targets, meals, workouts) comes from the get_day_context tool — always ground numbers in it.

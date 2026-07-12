@@ -18,6 +18,8 @@ def main():
     p = argparse.ArgumentParser(description="Create a FitAgent user + seed plan v1")
     p.add_argument("name")
     p.add_argument("--chat-id", default=None, help="Telegram chat id for this user's DMs")
+    p.add_argument("--profile", default=None,
+                   help='what the agent should know about you, e.g. "23M, 175cm, cutting 76->68kg, desk job"')
     p.add_argument("--tz", default="Asia/Kolkata")
     p.add_argument("--lat", type=float, default=None)
     p.add_argument("--lng", type=float, default=None)
@@ -27,9 +29,9 @@ def main():
     db = SessionLocal()
     try:
         user_id = db.execute(text("""
-            INSERT INTO users (name, api_token, telegram_chat_id, tz, lat, lng)
-            VALUES (:n, :t, :c, :tz, :lat, :lng) RETURNING id
-        """), {"n": args.name, "t": token, "c": args.chat_id,
+            INSERT INTO users (name, api_token, telegram_chat_id, profile, tz, lat, lng)
+            VALUES (:n, :t, :c, :p, :tz, :lat, :lng) RETURNING id
+        """), {"n": args.name, "t": token, "c": args.chat_id, "p": args.profile,
                "tz": args.tz, "lat": args.lat, "lng": args.lng}).first()[0]
         db.execute(text("""
             INSERT INTO plan_versions (user_id, plan, patch, rationale, source, approved)

@@ -28,7 +28,7 @@ That builds the React tracker (node stage), bakes it into the API image, and sta
 Then create each user — one command per person; it seeds their plan and prints their personal API token (save it!):
 
 
-docker compose exec api python -m app.create_user "Abhi" --chat-id 123456789
+docker compose exec api python -m app.create_user "Abhi" --chat-id 123456789 --profile "23M, 175cm, cutting 76->68kg"
 docker compose exec api python -m app.create_user "Friend" --chat-id 987654321
 3. Use it — the whole loop
 Open http://localhost:8000 — that's the V-Taper Log, served by FastAPI itself.

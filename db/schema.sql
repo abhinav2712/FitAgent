@@ -7,6 +7,8 @@ CREATE TABLE users (
     name            TEXT NOT NULL,
     api_token       TEXT NOT NULL UNIQUE, -- bearer credential: tracker app + iPhone Shortcut (X-Api-Token)
     telegram_chat_id TEXT,                -- per-user DM target; the bot token is global
+    profile         TEXT,                 -- free text injected into the agent's system prompt:
+                                          -- age/sex/height, goal ("23M, 175cm, cutting 76→68kg"), constraints
     tz              TEXT DEFAULT 'Asia/Kolkata',   -- informational for now; cron runs in the worker tz
     lat             NUMERIC(9,6),         -- for Swiggy search when the real MCP lands
     lng             NUMERIC(9,6),

@@ -19,7 +19,8 @@
       "Bash(curl -s \"localhost:8000/log/chat?limit=5\")",
       "Bash(python3 -m json.tool)",
       "Bash(git add *)",
-      "Bash(git commit -q -m ' *)"
+      "Bash(git commit -q -m ' *)",
+      "Bash(sed -i '' 's|docker compose exec api python -m app.create_user \"Abhi\" --chat-id 123456789$|docker compose exec api python -m app.create_user \"Abhi\" --chat-id 123456789 --profile \"23M, 175cm, cutting 76->68kg\"|' local_setup.md README.md)"
     ]
   }
 }
