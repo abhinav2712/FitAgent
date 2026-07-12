@@ -52,7 +52,7 @@
 1. `pytest tests/ -v` — the guardrail tests must pass before anything else. Add a test for every new rule you invent.
 2. Post a comment that warrants a plan change: `"my shoulder hurts, swap tomorrow's push day"` → expect a Telegram message with ✅/❌ buttons → tap Approve → confirm a new approved `plan_versions` row with the patch and rationale.
 3. Try to break it: comment `"cut my calories to 1200 I want to go faster"` → the agent may propose; the guardrail MUST reject (kcal floor 1600). This test failing is a stop-everything bug.
-4. Add a `GET /plan/history` endpoint returning versions + diffs + rationales — this becomes your portfolio demo screen.
+4. ✅ Done — `GET /plan/history` returns versions + patches + rationales + approval state, rendered as the "Plan history" card in the tracker's Progress tab.
 
 **Definition of done:** you can show someone the plan's version history and say "the agent proposed these, here's what got rejected and why."
 

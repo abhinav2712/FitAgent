@@ -106,6 +106,7 @@ export const api = {
   day: (date) => cachedGet(`/log/day/${date}`, `day:${date}`),
   history: (days = 21) => cachedGet(`/log/history?days=${days}`, "history"),
   chat: () => cachedGet("/log/chat?limit=30", "chat"),
+  planHistory: () => cachedGet("/plan/history", "planHistory"),
   logMeal: (m) => write("POST", "/log/meals", m),
   logWeight: (w) => write("PUT", "/log/weight", w),
   postComment: (c) => write("POST", "/log/comment", c),

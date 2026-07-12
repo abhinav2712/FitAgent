@@ -35,7 +35,7 @@ Effort: **S** = an evening · **M** = a weekend · **L** = a week+
 
 | Idea | What & why | How it fits | Effort |
 |---|---|---|---|
-| **Plan history screen** | `GET /plan/history` + a tracker tab showing versions, diffs, rationales, who approved what. Already promised in IMPLEMENTATION_PLAN Phase 3 — also the portfolio demo screen | Read-only endpoint over `plan_versions`; append-only design makes this free | S |
+| ~~**Plan history screen**~~ ✅ shipped | `GET /plan/history` + the "Plan history" card in the Progress tab: versions, patches, rationales, approval state | Read-only endpoint over `plan_versions`; append-only design made this free | S |
 | **Instant chat pickup** | Postgres LISTEN/NOTIFY instead of the 30s comment poll — replies in ~2s. Only when the latency actually annoys (earn-it table) | Worker listens; API `NOTIFY`s on comment insert | S |
 | **Voice notes** | Speak instead of type after a workout; transcribe → normal comment pipeline | Audio upload + transcription call in front of `/log/comment`; everything downstream unchanged | M |
 | **WhatsApp delivery** (v2 list) | Meta Cloud API instead of/alongside Telegram — where the rest of life already happens | `notify.py` grows a second transport behind the same `send(user, ...)` signature | M |
@@ -73,7 +73,7 @@ Effort: **S** = an evening · **M** = a weekend · **L** = a week+
 
 ## Suggested picking order
 
-Cheap wins that compound first: **plan history screen → intent triage → weekly trend
-review → sleep data → waist measurements**. Then the two bigger bets that most change
-daily life: **meal photos** and **real Swiggy MCP** (approval-gated). Everything in
-§5 rides along with the deployment milestone.
+Cheap wins that compound first: ~~plan history screen~~ (✅ shipped) → **intent triage →
+weekly trend review → sleep data → waist measurements**. Then the two bigger bets that
+most change daily life: **meal photos** and **real Swiggy MCP** (approval-gated).
+Everything in §5 rides along with the deployment milestone.

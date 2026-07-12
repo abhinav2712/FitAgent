@@ -142,6 +142,7 @@ export default function App() {
   const [day, setDay] = useState({ meals: [], weight_kg: null });
   const [history, setHistory] = useState([]);
   const [exercises, setExercises] = useState(() => readJSON(EX_KEY, {}));
+  const [planVersions, setPlanVersions] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const [offline, setOffline] = useState(false);
   const [sync, setSync] = useState("idle"); // idle | saving | saved | queued
@@ -203,7 +204,10 @@ export default function App() {
   }, [day.weight_kg]);
 
   useEffect(() => {
-    if (tab === "progress") loadHistory();
+    if (tab === "progress") {
+      loadHistory();
+      api.planHistory().then(({ data }) => setPlanVersions(data)).catch(() => {});
+    }
   }, [tab]);
 
   const planDay = plan?.meals?.[wdKey];
@@ -602,6 +606,52 @@ export default function App() {
               <div className="vt-cue" style={{ marginTop: 12 }}>
                 Your log lives in Postgres now — every number here is what the agent sees.
               </div>
+            </section>
+
+            <section className="vt-card">
+              <div className="vt-cardtitle" style={{ marginBottom: 4 }}>Plan history</div>
+              <div className="vt-cue">
+                Every version of your plan — who changed it, why, and what exactly changed.
+                Plans are append-only: nothing is ever edited in place.
+              </div>
+              {planVersions.map((v) => (
+                <div key={v.id} style={{ borderTop: "1px solid " + C.line, padding: "11px 0" }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <span className="vt-mono" style={{ color: C.mute, fontSize: 12 }}>
+                      v{v.id} · {fmtDate(v.created_at.slice(0, 10))}
+                    </span>
+                    <span className="vt-pill" style={{
+                      color: v.source === "agent" ? C.saff : C.green }}>
+                      {v.source === "seed" ? "🌱 seed" : v.source === "agent" ? "🤖 agent" : "👤 you"}
+                    </span>
+                    <span className="vt-pill" style={{ color: v.approved ? C.green : C.red }}>
+                      {v.approved ? "✓ applied" : "awaiting approval"}
+                    </span>
+                    {v.targets && (
+                      <span className="vt-mono" style={{ color: C.mute, fontSize: 12 }}>
+                        {v.targets.kcal} kcal · {v.targets.protein_g}g P
+                      </span>
+                    )}
+                  </div>
+                  {v.rationale && (
+                    <div style={{ fontSize: 14, marginTop: 5 }}>{v.rationale}</div>
+                  )}
+                  {(v.patch || []).length > 0 && (
+                    <details style={{ marginTop: 5 }}>
+                      <summary className="vt-mono" style={{ color: C.mute, fontSize: 12, cursor: "pointer" }}>
+                        {v.patch.length} change{v.patch.length === 1 ? "" : "s"}
+                      </summary>
+                      {v.patch.map((op, i) => (
+                        <div key={i} className="vt-mono" style={{ fontSize: 11.5, color: C.mute,
+                          padding: "3px 0 0 12px", overflowWrap: "anywhere" }}>
+                          {op.op} {op.path}
+                          {op.value !== undefined ? " → " + JSON.stringify(op.value) : ""}
+                        </div>
+                      ))}
+                    </details>
+                  )}
+                </div>
+              ))}
             </section>
           </>
         )}

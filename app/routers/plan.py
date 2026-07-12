@@ -16,6 +16,20 @@ def active_plan(db: Session = Depends(get_db), user: dict = Depends(get_current_
         raise HTTPException(404, "no plan for this user — run: python -m app.create_user")
     return dict(row)
 
+@router.get("/plan/history")
+def plan_history(limit: int = 50, db: Session = Depends(get_db),
+                 user: dict = Depends(get_current_user)):
+    """Your plan's full audit trail, newest first: every version with its
+    RFC6902 patch, rationale, source (seed|agent|user), and approval state.
+    Append-only storage makes this a plain SELECT."""
+    rows = db.execute(text("""
+        SELECT id, created_at, source, approved, rationale, patch,
+               plan->'targets' AS targets
+        FROM plan_versions WHERE user_id = :u
+        ORDER BY id DESC LIMIT :n
+    """), {"u": user["id"], "n": limit}).mappings().all()
+    return [dict(r) for r in rows]
+
 @router.post("/plan/approvals/{approval_id}/{decision}")
 def resolve_approval(approval_id: int, decision: str, db: Session = Depends(get_db),
                      user: dict = Depends(get_current_user)):
