@@ -56,8 +56,11 @@ def day_log(d: Date, db: Session = Depends(get_db),
     h = db.execute(text(
         "SELECT steps, active_kcal, workouts FROM health_metrics WHERE user_id=:u AND date=:d"),
         {"u": user["id"], "d": d}).mappings().first()
+    notes = [r[0] for r in db.execute(text(
+        "SELECT note FROM day_notes WHERE user_id=:u AND date=:d ORDER BY id"),
+        {"u": user["id"], "d": d})]
     return {"date": str(d), "meals": meals, "weight_kg": float(w[0]) if w else None,
-            "health": dict(h) if h else None}
+            "health": dict(h) if h else None, "notes": notes}
 
 @router.get("/log/history")
 def log_history(days: int = 21, db: Session = Depends(get_db),

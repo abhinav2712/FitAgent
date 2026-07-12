@@ -58,6 +58,18 @@ CREATE TABLE comments (
     created_at      TIMESTAMPTZ DEFAULT now()
 );
 
+-- Day-level adjustments the agent records from chat ("rest-day walk skipped —
+-- 20 min yoga instead") — shown on the tracker's Today tab. Reality layer,
+-- like off-plan meal_logs rows; never a plan change.
+CREATE TABLE day_notes (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES users(id),
+    date            DATE NOT NULL,
+    note            TEXT NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (user_id, date, note)      -- agent re-runs can't duplicate a note
+);
+
 -- Plans are append-only. Active plan = a user's latest row with approved = true.
 CREATE TABLE plan_versions (
     id              SERIAL PRIMARY KEY,

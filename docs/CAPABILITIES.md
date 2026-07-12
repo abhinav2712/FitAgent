@@ -14,6 +14,9 @@ behavior in code, change this file in the same commit.
   I eat tonight to hit my protein?"
 - **Logs off-plan food** with estimated macros → appears in your plate as an
   "Off-plan · logged by agent" row and counts toward your fuel gauge.
+- **Records day notes** for non-food deviations ("rest-day walk skipped — 20 min
+  yoga instead") → shown as the 🤖 Today's notes card on the Today tab. These are
+  the reality layer, like off-plan food — never a plan change.
 - **Rebalances the rest of *today***: recalculates what you have left and either
   advises ("swap tonight's phulkas for salad") or edits today's remaining meals
   within the guardrail bounds below. It touches future days only when genuinely

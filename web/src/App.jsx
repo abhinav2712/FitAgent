@@ -135,6 +135,51 @@ function WeightChart({ points }) {
   );
 }
 
+// Daily steps, last 14 calendar days. One series → one hue, no legend (the
+// card title carries identity); missing days stay honest gaps; labels only on
+// the max and latest bars; native <title> tooltips per bar.
+function StepsChart({ byDate }) {
+  const W = 560, H = 150, pad = 26;
+  const days = [];
+  const d = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const dt = new Date(d); dt.setDate(d.getDate() - i);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    days.push({ key, steps: byDate[key] ?? null });
+  }
+  const max = Math.max(1, ...days.map((p) => p.steps || 0));
+  const slot = (W - pad * 2) / 14;
+  const bw = Math.floor(slot) - 2; // 2px gap between adjacent bars
+  const y = (s) => (H - pad - 14) * (s / max);
+  const maxIdx = days.findIndex((p) => p.steps === max);
+  const lastIdx = days.map((p) => p.steps != null).lastIndexOf(true);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ marginTop: 10 }} role="img"
+      aria-label="Daily steps, last 14 days">
+      <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke={C.line} strokeWidth="1.5" />
+      {days.map((p, i) => p.steps != null && (
+        <g key={p.key}>
+          <rect x={pad + i * slot + 1} y={H - pad - y(p.steps)} width={bw}
+            height={Math.max(2, y(p.steps))} rx="3" fill={C.saff}>
+            <title>{fmtDate(p.key)}: {p.steps.toLocaleString("en-IN")} steps</title>
+          </rect>
+          {(i === maxIdx || i === lastIdx) && (
+            <text x={pad + i * slot + 1 + bw / 2} y={H - pad - y(p.steps) - 6}
+              textAnchor="middle" fontSize="10.5"
+              fontFamily="'IBM Plex Mono', monospace" fill={C.text}>
+              {(p.steps / 1000).toFixed(1)}k
+            </text>
+          )}
+        </g>
+      ))}
+      <text x={pad} y={H - 8} fontSize="10.5" fontFamily="'IBM Plex Mono', monospace"
+        fill={C.mute}>{fmtDate(days[0].key)}</text>
+      <text x={W - pad} y={H - 8} textAnchor="end" fontSize="10.5"
+        fontFamily="'IBM Plex Mono', monospace" fill={C.mute}>{fmtDate(days[13].key)}</text>
+    </svg>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("today");
   const [guideTab, setGuideTab] = useState("push");
@@ -337,6 +382,12 @@ export default function App() {
     [history]
   );
 
+  const stepsByDate = useMemo(() => {
+    const m = {};
+    history.forEach((h) => { if (h.steps != null) m[h.date] = h.steps; });
+    return m;
+  }, [history]);
+
   if (status === "loading") {
     return (
       <div className="vt-root" style={{ display: "grid", placeItems: "center" }}>
@@ -498,6 +549,18 @@ export default function App() {
               ))}
             </section>
 
+            {(day.notes || []).length > 0 && (
+              <section className="vt-card">
+                <div className="vt-cardtitle">🤖 Today's notes</div>
+                {day.notes.map((n, i) => (
+                  <div key={i} style={{ fontSize: 14, lineHeight: 1.45, marginTop: 8,
+                    paddingLeft: 10, borderLeft: `3px solid ${C.saff}` }}>
+                    {n}
+                  </div>
+                ))}
+              </section>
+            )}
+
             <section className="vt-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
                 <div className="vt-cardtitle" style={{ color: workout.color }}>{workout.label}</div>
@@ -622,6 +685,16 @@ export default function App() {
                 <div className="vt-cue">
                   First & last logged: {weights[0].w}kg → {weights[weights.length - 1].w}kg.
                   Aim: ~0.4–0.5kg/week down.
+                </div>
+              </section>
+            )}
+
+            {Object.keys(stepsByDate).length > 0 && (
+              <section className="vt-card">
+                <div className="vt-cardtitle">Steps — last 14 days</div>
+                <StepsChart byDate={stepsByDate} />
+                <div className="vt-cue">
+                  Synced nightly from your iPhone. Gaps are days with no sync.
                 </div>
               </section>
             )}

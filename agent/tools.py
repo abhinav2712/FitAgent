@@ -44,6 +44,11 @@ TOOLS = [
      "description": "Send the user a Telegram message. Use Markdown, keep it short.",
      "input_schema": {"type": "object", "properties": {
          "text": {"type": "string"}}, "required": ["text"]}},
+    {"name": "add_day_note",
+     "description": "Record a one-line day adjustment shown on the user's Today screen. Use for non-food deviations: workout skipped or substituted, injury accommodation, schedule note (e.g. 'Rest-day walk skipped — 20 min yoga instead'). Not for food (use log_offplan_food) and not a plan change.",
+     "input_schema": {"type": "object", "properties": {
+         "date": {"type": "string"}, "note": {"type": "string"}},
+         "required": ["date", "note"]}},
 ]
 
 WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -132,6 +137,14 @@ def handle(user: dict, name: str, args: dict) -> str:
         if name == "notify_user":
             notify.send(user["telegram_chat_id"], args["text"])
             return "sent"
+
+        if name == "add_day_note":
+            db.execute(text("""
+                INSERT INTO day_notes (user_id, date, note) VALUES (:u, :d, :n)
+                ON CONFLICT (user_id, date, note) DO NOTHING
+            """), {"u": uid, "d": args["date"], "n": args["note"][:200]})
+            db.commit()
+            return f"noted on Today screen: {args['note'][:80]}"
 
         return f"unknown tool {name}"
     finally:
