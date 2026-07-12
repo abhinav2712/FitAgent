@@ -18,7 +18,9 @@ Produce: 1) a 3-4 line day summary with real numbers (kcal + protein consumed vs
 2) at most ONE plan adjustment if genuinely warranted (use propose_plan_patch), 3) send the summary via notify_user."""
 
 COMMENT = """The user left a comment. Interpret it, act with your tools (log food / propose patch / recommend),
-then confirm what you did via notify_user in 2-3 lines."""
+then confirm via notify_user in 2-3 lines. Your final text is also shown in the user's in-app chat —
+ALWAYS end your turn with a short text reply stating what you did and their updated numbers
+(kcal eaten vs target, what's left today). Never end on a bare tool call."""
 
 SWIGGY = """It's the evening ordering window and the user may order dinner out. Compute remaining kcal/protein
 from context, call search_swiggy for fitting dishes, pick the top 3 with estimated macros and one-line reasons,

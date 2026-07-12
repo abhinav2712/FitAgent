@@ -77,7 +77,7 @@ export default function Chat({ open, onClose, onAgentReply }) {
               {m.reply ? (
                 <div className="vt-bubble agent">{m.reply}</div>
               ) : m.processed ? (
-                <div className="vt-bubble agent thinking">✓ handled — details on Telegram</div>
+                <div className="vt-bubble agent thinking">✓ processed — check the Today tab for changes</div>
               ) : (
                 <div className="vt-bubble agent thinking">FitAgent is thinking…</div>
               )}

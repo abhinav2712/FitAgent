@@ -20,6 +20,19 @@ client = Anthropic(api_key=settings.anthropic_api_key,
                    base_url=settings.anthropic_base_url or None)
 MAX_TURNS = 8
 
+ACTION_TOOLS = ("log_offplan_food", "propose_plan_patch", "create_recommendation")
+
+def _fallback_reply(tool_call_log: list) -> str:
+    """Small/local models sometimes end a run on a bare tool call with no text.
+    The chat still deserves a reply: prefer what the agent sent via notify_user
+    (the user-facing message by design); else summarize the actions actually
+    taken (tool results are human-readable); else empty → UI fallback bubble."""
+    notes = [c["args"].get("text") for c in tool_call_log if c["tool"] == "notify_user"]
+    if any(notes):
+        return notes[-1]
+    acted = [c["result"] for c in tool_call_log if c["tool"] in ACTION_TOOLS]
+    return "✓ " + "; ".join(acted) if acted else ""
+
 def run(user: dict, trigger: str, user_message: str) -> tuple[int, str]:
     """Returns (agent_run_id, final_text) — the id lets callers link the run
     to what triggered it (e.g. comments.agent_run_id for the in-app chat)."""
@@ -53,6 +66,9 @@ def run(user: dict, trigger: str, user_message: str) -> tuple[int, str]:
             tool_call_log.append({"tool": tu.name, "args": tu.input, "result": out[:500]})
             results.append({"type": "tool_result", "tool_use_id": tu.id, "content": out})
         messages.append({"role": "user", "content": results})
+
+    if not final_text:
+        final_text = _fallback_reply(tool_call_log)
 
     db = SessionLocal()
     try:
