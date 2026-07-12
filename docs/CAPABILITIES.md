@@ -40,7 +40,7 @@ behavior in code, change this file in the same commit.
 |---|---|---|
 | Log off-plan food you mention | Agent, automatic | appends to your log only — never touches the plan or goals |
 | Small meal tweaks (≤4 edits, today's items) | Agent auto-applies, you're notified | `guardrails.apply_and_validate` bounds below |
-| **Your goals/targets (kcal, protein)** | **You, always** — Approve/Reject buttons on Telegram | any patch touching `/targets` or `/weekly_workouts` requires approval (`requires_human_approval`) |
+| **Your goals/targets (kcal, protein)** | **You, always** — Approve/Reject in the tracker's Today-tab card or on Telegram | any patch touching `/targets` or `/weekly_workouts` requires approval (`requires_human_approval`) |
 | Weekly workout schedule | You, always (same buttons) | same |
 | Changing the guardrail constants themselves | Only you, asking a human explicitly in code | hard-coded in `guardrails.py`; agent suggestions are not authorization |
 | Rolling back any plan change | You | plans are append-only versions — every change has a patch + rationale, one-tap revert |

@@ -120,7 +120,7 @@ The same principle governs Swiggy: the MCP client is initialized with a **whitel
 ### 2.5 Delivery — Telegram first, plus the in-app chat
 Telegram Bot API: free, no approval process, supports inline approval buttons, 20 lines of code. WhatsApp (Meta Cloud API) is the v2 upgrade — you already know that terrain from TableTruth, but its template-message rules and pricing are friction you don't need in week one.
 
-Comment replies additionally surface inside the tracker's chat panel (`GET /log/chat`, polled while the panel is open) — same agent output, second screen. Approvals and the nightly digest remain Telegram-only: the digest is push (the app can't wake your phone), and approval buttons need to reach you when the app isn't open.
+Comment replies additionally surface inside the tracker's chat panel (`GET /log/chat`, polled while the panel is open) — same agent output, second screen. Approvals have two surfaces over one endpoint: a card at the top of the tracker's Today tab (`GET /plan/approvals` + the same resolve POST the worker uses) and the Telegram inline buttons — so a Telegram-less setup (e.g. free local mode) can still approve/reject. The nightly digest remains Telegram-only: it's push, and the app can't wake your phone.
 
 One bot serves all users: each user's DMs go to their own `telegram_chat_id` (stored in the users table), and an approval button press is honoured only if it comes from the plan owner's chat — the worker checks the presser's chat id and resolves the approval through the API using the owner's token, so ownership is enforced server-side in one place.
 

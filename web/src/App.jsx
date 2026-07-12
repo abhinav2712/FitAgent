@@ -148,6 +148,7 @@ export default function App() {
   const [sync, setSync] = useState("idle"); // idle | saving | saved | queued
   const [weightInput, setWeightInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [approvals, setApprovals] = useState([]);
 
   const tKey = todayKey();
   const wdKey = weekdayKeyOf(tKey);
@@ -156,6 +157,19 @@ export default function App() {
     api.day(tKey).then(({ data }) => setDay(data)).catch(() => {});
   const loadHistory = () =>
     api.history(21).then(({ data }) => setHistory(data)).catch(() => {});
+  const loadApprovals = () =>
+    api.approvals().then(({ data }) => setApprovals(data)).catch(() => {});
+
+  // Same endpoint the Telegram buttons hit — ownership enforced server-side.
+  // The plan may change on approve, so reload everything plan-shaped after.
+  const decideApproval = async (id, decision) => {
+    try {
+      await api.resolveApproval(id, decision);
+    } catch { /* already resolved elsewhere (e.g. Telegram) — just refresh */ }
+    loadApprovals();
+    api.activePlan().then(({ data }) => setPlan(data.plan)).catch(() => {});
+    api.planHistory().then(({ data }) => setPlanVersions(data)).catch(() => {});
+  };
 
   useEffect(() => {
     if (!getToken()) {
@@ -168,7 +182,7 @@ export default function App() {
         setPlan(planDoc.plan);
         setOffline(fromCache);
         migrateLegacyData(planDoc.plan);
-        await Promise.all([loadDay(), loadHistory()]);
+        await Promise.all([loadDay(), loadHistory(), loadApprovals()]);
         setStatus("ready");
       } catch (e) {
         setStatus(e instanceof AuthError ? "pair" : "error");
@@ -180,7 +194,10 @@ export default function App() {
   // back to the tab; queued writes retry on reconnect and every 20s.
   useEffect(() => {
     const refresh = () => {
-      if (document.visibilityState === "visible") loadDay();
+      if (document.visibilityState === "visible") {
+        loadDay();
+        loadApprovals(); // the 22:00 nightly review may have proposed a change
+      }
     };
     const retry = async () => {
       if (api.pendingWrites() > 0 && (await flushQueue()) === 0) {
@@ -375,6 +392,39 @@ export default function App() {
 
         {tab === "today" && (
           <>
+            {approvals.map((a) => (
+              <section key={a.id} className="vt-card" style={{ borderColor: C.saff }}>
+                <div className="vt-cardtitle" style={{ color: C.saff }}>
+                  🤖 Plan change awaiting your approval
+                </div>
+                <div style={{ fontSize: 14, marginTop: 6 }}>{a.summary}</div>
+                {(a.patch || []).length > 0 && (
+                  <details style={{ marginTop: 6 }}>
+                    <summary className="vt-mono" style={{ color: C.mute, fontSize: 12, cursor: "pointer" }}>
+                      {a.patch.length} change{a.patch.length === 1 ? "" : "s"}
+                    </summary>
+                    {a.patch.map((op, i) => (
+                      <div key={i} className="vt-mono" style={{ fontSize: 11.5, color: C.mute,
+                        padding: "3px 0 0 12px", overflowWrap: "anywhere" }}>
+                        {op.op} {op.path}
+                        {op.value !== undefined ? " → " + JSON.stringify(op.value) : ""}
+                      </div>
+                    ))}
+                  </details>
+                )}
+                <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                  <button className="vt-send" style={{ background: C.green, marginTop: 0 }}
+                    onClick={() => decideApproval(a.id, "approve")}>
+                    ✅ Approve
+                  </button>
+                  <button className="vt-danger" style={{ marginTop: 0 }}
+                    onClick={() => decideApproval(a.id, "reject")}>
+                    ❌ Reject
+                  </button>
+                </div>
+              </section>
+            ))}
+
             <section className="vt-card">
               <div className="vt-cardtitle">Fuel gauge</div>
               <Gauge label="CALORIES" val={kcal} target={targets.kcal} unit="kcal" color={C.saff} />
@@ -663,7 +713,7 @@ export default function App() {
         </button>
       )}
       <Chat open={chatOpen} onClose={() => setChatOpen(false)}
-        onAgentReply={() => { loadDay(); loadHistory(); }} />
+        onAgentReply={() => { loadDay(); loadHistory(); loadApprovals(); }} />
 
       <nav className="vt-tabs" aria-label="Sections">
         {[["today", "Today"], ["guide", "Guide"], ["progress", "Progress"]].map(([k, label]) => (

@@ -30,6 +30,20 @@ def plan_history(limit: int = 50, db: Session = Depends(get_db),
     """), {"u": user["id"], "n": limit}).mappings().all()
     return [dict(r) for r in rows]
 
+@router.get("/plan/approvals")
+def pending_approvals(db: Session = Depends(get_db),
+                      user: dict = Depends(get_current_user)):
+    """Your open plan-change proposals — feeds the tracker's approval card
+    (same decisions as the Telegram buttons, second surface)."""
+    rows = db.execute(text("""
+        SELECT a.id, a.plan_version_id, a.summary, a.created_at, p.patch
+        FROM pending_approvals a
+        JOIN plan_versions p ON p.id = a.plan_version_id
+        WHERE p.user_id = :u AND a.status = 'pending'
+        ORDER BY a.id
+    """), {"u": user["id"]}).mappings().all()
+    return [dict(r) for r in rows]
+
 @router.post("/plan/approvals/{approval_id}/{decision}")
 def resolve_approval(approval_id: int, decision: str, db: Session = Depends(get_db),
                      user: dict = Depends(get_current_user)):

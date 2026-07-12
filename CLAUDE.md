@@ -40,7 +40,8 @@ User-facing behavior contract: docs/CAPABILITIES.md — update it in the same co
 4. **kcal floor 1600, protein 120–150g** — hard-coded in guardrails.py. Changing these
    constants requires the human user asking explicitly, not an agent suggestion.
 5. Structural changes (targets, weekly_workouts, >4 patch ops) require human approval
-   via pending_approvals + Telegram buttons.
+   via pending_approvals — resolved from the tracker's approval card or Telegram
+   buttons, both through POST /plan/approvals/{id}/{decision} (ownership-checked).
 6. **User scoping is injected by Python, never chosen by the LLM.** The user is not a
    tool parameter; `tools.handle(user, ...)` binds user_id into every query. Every new
    table gets a user_id column; every new query filters on it; approval resolution

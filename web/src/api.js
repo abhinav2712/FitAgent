@@ -107,6 +107,12 @@ export const api = {
   history: (days = 21) => cachedGet(`/log/history?days=${days}`, "history"),
   chat: () => cachedGet("/log/chat?limit=30", "chat"),
   planHistory: () => cachedGet("/plan/history", "planHistory"),
+  approvals: () => cachedGet("/plan/approvals", "approvals"),
+  // Deliberately NOT queued: an approval decision needs an immediate,
+  // online answer — a replayed approve/reject after the row was resolved
+  // elsewhere would 404 forever and wedge the ordered write queue.
+  resolveApproval: (id, decision) =>
+    request(`/plan/approvals/${id}/${decision}`, { method: "POST" }),
   logMeal: (m) => write("POST", "/log/meals", m),
   logWeight: (w) => write("PUT", "/log/weight", w),
   postComment: (c) => write("POST", "/log/comment", c),

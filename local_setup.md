@@ -50,7 +50,7 @@ Trigger the scheduled runs manually instead of waiting for 22:00 / 18:00 IST:
 
 docker compose exec worker python -c "from worker.scheduler import nightly_all; nightly_all()"   # all users
 docker compose exec worker python -c "from worker.scheduler import swiggy_all; swiggy_all()"    # mock Swiggy dinner picks, all users
-Test the approval flow: comment "my shoulder hurts, swap tomorrow's push day" → Telegram message with ✅/❌ buttons → tap Approve → new row in plan_versions.
+Test the approval flow: comment "my shoulder hurts, swap tomorrow's push day" → an approval card appears at the top of the Today tab (and as Telegram ✅/❌ buttons if configured) → tap Approve → the plan advances (see Plan history in Progress).
 Debug from data — every agent run is audited:
 
 docker compose exec db psql -U fitagent -c "SELECT id, trigger, output_text FROM agent_runs ORDER BY id DESC LIMIT 3;"

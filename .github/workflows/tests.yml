@@ -1,0 +1,14 @@
+# Guardrail tests are the release gate (CODING_GUIDELINES §9) — they're pure
+# Python, no database needed, so CI stays a 30-second pip+pytest.
+name: tests
+on: [push, pull_request]
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v
