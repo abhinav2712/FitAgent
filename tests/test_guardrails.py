@@ -29,6 +29,21 @@ def test_structural_changes_need_human():
     assert requires_human_approval([{"op": "replace", "path": "/targets/kcal", "value": 1800}])
     assert not requires_human_approval([{"op": "replace", "path": "/meals/mon/items/0/kcal", "value": 850}])
 
+def test_malformed_patch_rejected_not_crashed():
+    """Fail closed: unappliable patches (bad path, bad op) must raise
+    GuardrailViolation — a rejection the model can react to — never leak
+    jsonpatch/jsonpointer exceptions that crash the agent run.
+    (Regression: a local model patched /plan_today/... — a context key, not a
+    plan path — and the JsonPointerException crashed the worker.)"""
+    for bad in (
+        [{"op": "replace", "path": "/plan_today/items/0/kcal", "value": 400}],
+        [{"op": "replace", "path": "/meals/mon/items/99/kcal", "value": 400}],
+        [{"op": "bogus", "path": "/targets/kcal", "value": 1800}],
+        [{"op": "replace", "path": "/meals/mon/items/xyz/kcal", "value": 400}],
+    ):
+        with pytest.raises(GuardrailViolation):
+            apply_and_validate(PLAN, bad)
+
 def test_seed_plan_passes_its_own_guardrails():
     """apply_and_validate revalidates EVERY day, so a seed plan that violates a
     floor makes all future patches unappliable. Empty patch = pure validation.

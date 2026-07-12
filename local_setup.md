@@ -4,10 +4,20 @@ Here's the full local runbook, in order:
 
 cd ~/Desktop/fitagent
 cp .env.example .env
-Fill the two things the agent can't work without:
+Fill the LLM section — two options:
 
-ANTHROPIC_API_KEY — from console.anthropic.com.
-TELEGRAM_BOT_TOKEN — message @BotFather → /newbot → copy the token. (Chat ids are per user now — each person messages the bot once, then https://api.telegram.org/bot<TOKEN>/getUpdates shows their chat.id; you pass it to create_user below.)
+FREE LOCAL (no credits, currently active in .env): Ollama serves an Anthropic-compatible API on this Mac.
+  brew services start ollama          # or: ollama serve
+  ANTHROPIC_API_KEY=ollama, ANTHROPIC_BASE_URL=http://host.docker.internal:11434,
+  AGENT_MODEL=gemma4:e4b (already pulled; any tool-calling model works, e.g. qwen3:8b).
+  Trade-off: a local 8B model is far weaker than Claude — expect clumsier replies and
+  occasional malformed patches. The guardrails are deterministic Python, so safety is
+  identical; only quality differs. Swap to paid Claude anytime by editing .env.
+
+PAID (better quality): ANTHROPIC_API_KEY from console.anthropic.com, leave ANTHROPIC_BASE_URL empty.
+
+TELEGRAM_BOT_TOKEN — optional for local testing (empty = notifications print to worker logs).
+For real use: message @BotFather → /newbot → copy the token. Chat ids are per user — each person messages the bot once, then https://api.telegram.org/bot<TOKEN>/getUpdates shows their chat.id; pass it to create_user below.
 Leave SWIGGY_MOCK=true (real MCP isn't implemented yet) and DATABASE_URL as-is (it points at the db compose service).
 
 2. Start the stack
@@ -54,4 +64,4 @@ The Docker stack keeps serving the last built version at :8000; npm run build re
 docker compose exec api pytest tests/ -v   # guardrail tests — the critical ones
 Shut down with docker compose down (data survives in the pgdata volume; down -v wipes it).
 
-One heads-up: without TELEGRAM_BOT_TOKEN (or a user without --chat-id) notifications no-op into the worker logs, and without ANTHROPIC_API_KEY every agent trigger errors — the tracker UI and all /log/* endpoints still work fine on their own, so you can test the data pipes before spending on keys. Setting up for someone else = one create_user command + they pair their browser + build their Shortcut with their token.
+One heads-up: without TELEGRAM_BOT_TOKEN (or a user without --chat-id) notifications no-op into the worker logs — replies still appear in the tracker's 🤖 chat, which is enough for local testing. In free local mode the first reply after a cold start is slow (~30–60s: Ollama loads the model into RAM), then speeds up. Setting up for someone else = one create_user command + they pair their browser + build their Shortcut with their token.

@@ -9,7 +9,8 @@ APScheduler · Telegram · Swiggy MCP · Docker Compose
 
 ## Quickstart
 ```bash
-cp .env.example .env        # fill ANTHROPIC_API_KEY + TELEGRAM_BOT_TOKEN at minimum
+cp .env.example .env        # LLM: paid Claude API key, OR free local Ollama
+                            # (ANTHROPIC_BASE_URL — see .env.example Option B)
 docker compose up --build
 # one command per person — creates the user, seeds their plan, prints their API token:
 docker compose exec api python -m app.create_user "Abhi" --chat-id 123456789

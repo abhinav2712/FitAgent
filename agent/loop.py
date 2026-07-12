@@ -13,7 +13,11 @@ from app.config import settings
 from app.db import SessionLocal
 from agent import tools, prompts
 
-client = Anthropic(api_key=settings.anthropic_api_key)
+# base_url override lets any Anthropic-compatible server stand in for the
+# Claude API (Ollama for free local models) — the loop, tools, and guardrails
+# are identical either way.
+client = Anthropic(api_key=settings.anthropic_api_key,
+                   base_url=settings.anthropic_base_url or None)
 MAX_TURNS = 8
 
 def run(user: dict, trigger: str, user_message: str) -> tuple[int, str]:

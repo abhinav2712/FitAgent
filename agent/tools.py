@@ -24,7 +24,7 @@ TOOLS = [
          "est_kcal": {"type": "integer"}, "est_protein_g": {"type": "integer"}},
          "required": ["date", "name", "est_kcal", "est_protein_g"]}},
     {"name": "propose_plan_patch",
-     "description": "Propose a change to the plan as an RFC6902 JSON Patch array against the current plan document, with a one-line rationale. May be rejected by validation.",
+     "description": "Propose a change to the plan as an RFC6902 JSON Patch array against the plan document, with a one-line rationale. Valid paths look like /meals/<mon..sun>/items/<index>/kcal, /meals/wed/items/2/name, or /targets/kcal — NOT the get_day_context keys (plan_today etc.). May be rejected by validation.",
      "input_schema": {"type": "object", "properties": {
          "patch": {"type": "array", "items": {"type": "object"}},
          "rationale": {"type": "string"}}, "required": ["patch", "rationale"]}},

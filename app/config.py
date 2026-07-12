@@ -3,6 +3,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://fitagent:fitagent@localhost:5432/fitagent"
     anthropic_api_key: str = ""
+    anthropic_base_url: str = ""       # empty = official Claude API; set to an
+                                       # Anthropic-compatible server (e.g. Ollama
+                                       # http://localhost:11434) for free local models
     agent_model: str = "claude-sonnet-4-6"
     classifier_model: str = "claude-haiku-4-5-20251001"
     telegram_bot_token: str = ""       # one bot for all users; chat ids live in the users table

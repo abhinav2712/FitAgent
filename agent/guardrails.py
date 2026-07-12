@@ -3,6 +3,7 @@ All plan patches pass through validate_plan() BEFORE persisting.
 These bounds are hard-coded on purpose — the agent cannot talk its way past them.
 """
 import jsonpatch
+import jsonpointer
 
 KCAL_FLOOR = 1600          # never plan below this
 PROTEIN_MIN, PROTEIN_MAX = 120, 150
@@ -16,8 +17,15 @@ def day_totals(day_items):
             sum(i["protein_g"] for i in day_items))
 
 def apply_and_validate(current_plan: dict, patch_ops: list) -> dict:
-    """Apply RFC6902 patch, then enforce invariants. Raises GuardrailViolation."""
-    new_plan = jsonpatch.apply_patch(current_plan, patch_ops)
+    """Apply RFC6902 patch, then enforce invariants. Raises GuardrailViolation.
+    Fails closed: a patch that can't even be applied (bad op, path not in the
+    plan document) is a rejection the model can react to, never a crash."""
+    try:
+        new_plan = jsonpatch.apply_patch(current_plan, patch_ops)
+    except (jsonpatch.JsonPatchException, jsonpointer.JsonPointerException, TypeError) as e:
+        raise GuardrailViolation(
+            f"malformed patch ({e}) — paths must exist in the plan document, "
+            f"e.g. /meals/<mon..sun>/items/<i>/kcal or /targets/kcal")
 
     t = new_plan.get("targets", {})
     if t.get("kcal", 0) < KCAL_FLOOR:

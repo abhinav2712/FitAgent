@@ -54,6 +54,9 @@ User-facing behavior contract: docs/CAPABILITIES.md — update it in the same co
 - Macro numbers for restaurant food are always labelled "est." in user-facing text.
 
 ## Current state / TODO markers
+- LLM backend is switchable via ANTHROPIC_BASE_URL (empty = Claude API; an
+  Anthropic-compatible server like Ollama = free local dev). Same loop, tools,
+  and guardrails either way — never fork the agent code per backend.
 - swiggy_mcp.py: real MCP connection is NotImplementedError behind SWIGGY_MOCK=true;
   when implementing, pass the user's lat/lng from the users table.
 - security.py: per-user X-Api-Token header; HMAC signing is still the v2 upgrade.
