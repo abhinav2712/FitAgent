@@ -13,6 +13,10 @@ def receive_health(payload: HealthPayload, db: Session = Depends(get_db),
                    user: dict = Depends(get_current_user)):
     """Nightly push from a user's iPhone Shortcut (X-Api-Token identifies whose
     phone). Idempotent upsert on (user, date)."""
+    print(f"[webhook] {user['name']} {payload.date}: {payload.steps} steps, "
+          f"{payload.active_kcal} active kcal, {len(payload.workouts)} workout(s)"
+          + "".join(f" [{w.type}: {w.distance_km or '?'}km {w.duration_min or '?'}min]"
+                    for w in payload.workouts))
     db.execute(text("""
         INSERT INTO health_metrics (user_id, date, steps, active_kcal, workouts, raw_payload)
         VALUES (:u, :d, :s, :k, CAST(:w AS jsonb), CAST(:r AS jsonb))
