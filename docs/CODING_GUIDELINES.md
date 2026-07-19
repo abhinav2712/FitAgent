@@ -31,6 +31,7 @@ Work through these in order for any non-trivial change:
 | `app/config.py` | all settings (env-backed) | secrets hard-coded, `os.environ` reads elsewhere |
 | `app/security.py` | `get_current_user` (token → user row) | anything else |
 | `app/create_user.py` | user creation CLI + token mint + plan seed | — |
+| `app/swiggy_auth.py` | Swiggy OAuth (PKCE) linker CLI → users.swiggy_token | any MCP tool calls (client lives in agent/swiggy_mcp.py) |
 | `agent/loop.py` | the tool-use while-loop + audit write | tool implementations, SQL beyond `agent_runs` |
 | `agent/tools.py` | tool schemas + handlers (dispatch in `handle()`) | plan validation logic, direct plan writes bypassing guardrails |
 | `agent/guardrails.py` | ALL plan validation, pure functions, no I/O | DB access, LLM calls, network |

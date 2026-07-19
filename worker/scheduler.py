@@ -10,12 +10,16 @@ from app.config import settings
 from app.db import SessionLocal
 from agent import loop, notify
 
-USER_COLS = "id, name, telegram_chat_id, profile, tz, lat, lng"
+# One definition of the user row the agent needs — _all_users and the comment
+# join both derive from it, so adding a column is a one-line change.
+USER_FIELDS = ("id", "name", "telegram_chat_id", "profile", "tz", "lat", "lng",
+               "swiggy_token", "swiggy_token_expires_at")
 
 def _all_users():
     db = SessionLocal()
     try:
-        return [dict(r) for r in db.execute(text(f"SELECT {USER_COLS} FROM users")).mappings()]
+        return [dict(r) for r in db.execute(text(
+            f"SELECT {', '.join(USER_FIELDS)} FROM users")).mappings()]
     finally:
         db.close()
 
@@ -35,14 +39,14 @@ def swiggy_all():
 def process_new_comments():
     db = SessionLocal()
     try:
-        rows = db.execute(text("""
+        rows = db.execute(text(f"""
             SELECT c.id AS comment_id, c.date, c.text,
-                   u.id, u.name, u.telegram_chat_id, u.profile, u.tz, u.lat, u.lng
+                   {', '.join('u.' + f for f in USER_FIELDS)}
             FROM comments c JOIN users u ON u.id = c.user_id
             WHERE c.processed = false ORDER BY c.id LIMIT 5
         """)).mappings().all()
         for r in rows:
-            user = {k: r[k] for k in ("id", "name", "telegram_chat_id", "profile", "tz", "lat", "lng")}
+            user = {k: r[k] for k in USER_FIELDS}
             print(f"[worker] processing comment {r['comment_id']} (user {user['name']}): {r['text'][:60]}")
             run_id, _ = loop.process_comment(user, r["comment_id"], str(r["date"]), r["text"])
             db.execute(text(

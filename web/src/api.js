@@ -108,6 +108,8 @@ export const api = {
   chat: () => cachedGet("/log/chat?limit=30", "chat"),
   planHistory: () => cachedGet("/plan/history", "planHistory"),
   approvals: () => cachedGet("/plan/approvals", "approvals"),
+  // "day:" key prefix so these prune with the other per-day cache entries
+  recommendations: (date) => cachedGet(`/recommendations/${date}`, `day:recs:${date}`),
   // Deliberately NOT queued: an approval decision needs an immediate,
   // online answer — a replayed approve/reject after the row was resolved
   // elsewhere would 404 forever and wedge the ordered write queue.

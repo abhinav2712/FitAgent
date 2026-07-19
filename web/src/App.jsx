@@ -194,6 +194,7 @@ export default function App() {
   const [weightInput, setWeightInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [approvals, setApprovals] = useState([]);
+  const [recs, setRecs] = useState({ items: [] });
 
   const tKey = todayKey();
   const wdKey = weekdayKeyOf(tKey);
@@ -204,6 +205,8 @@ export default function App() {
     api.history(21).then(({ data }) => setHistory(data)).catch(() => {});
   const loadApprovals = () =>
     api.approvals().then(({ data }) => setApprovals(data)).catch(() => {});
+  const loadRecs = () =>
+    api.recommendations(tKey).then(({ data }) => setRecs(data)).catch(() => {});
 
   // Same endpoint the Telegram buttons hit — ownership enforced server-side.
   // The plan may change on approve, so reload everything plan-shaped after.
@@ -227,7 +230,7 @@ export default function App() {
         setPlan(planDoc.plan);
         setOffline(fromCache);
         migrateLegacyData(planDoc.plan);
-        await Promise.all([loadDay(), loadHistory(), loadApprovals()]);
+        await Promise.all([loadDay(), loadHistory(), loadApprovals(), loadRecs()]);
         setStatus("ready");
       } catch (e) {
         setStatus(e instanceof AuthError ? "pair" : "error");
@@ -242,6 +245,7 @@ export default function App() {
       if (document.visibilityState === "visible") {
         loadDay();
         loadApprovals(); // the 22:00 nightly review may have proposed a change
+        loadRecs();      // the 18:00 dinner window may have left picks
       }
     };
     const retry = async () => {
@@ -549,6 +553,40 @@ export default function App() {
               ))}
             </section>
 
+            {(recs.items || []).length > 0 && (
+              <section className="vt-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
+                  <div className="vt-cardtitle">🍽 Swiggy picks</div>
+                  {recs.remaining_kcal != null && (
+                    <span className="vt-pill">
+                      {recs.remaining_kcal} kcal · {recs.remaining_protein}g P left when picked
+                    </span>
+                  )}
+                </div>
+                {recs.items.map((it, i) => (
+                  <div key={i} style={{ borderTop: i ? `1px solid ${C.line}` : "none",
+                    padding: "11px 0" }}>
+                    <div className="vt-name" style={{ fontWeight: 600 }}>
+                      {it.dish || it.name}
+                      {it.price != null && (
+                        <span style={{ color: C.mute, fontWeight: 400 }}> · ₹{it.price}</span>
+                      )}
+                    </div>
+                    <div className="vt-macros">
+                      {it.restaurant}
+                      {it.est_kcal != null && <> · est. {it.est_kcal} kcal · {it.est_protein}g P</>}
+                    </div>
+                    {it.reason && (
+                      <div className="vt-cue" style={{ marginTop: 3 }}>{it.reason}</div>
+                    )}
+                  </div>
+                ))}
+                <div className="vt-macros" style={{ marginTop: 6 }}>
+                  Recommendations only — FitAgent can't place orders. Macros are estimates.
+                </div>
+              </section>
+            )}
+
             {(day.notes || []).length > 0 && (
               <section className="vt-card">
                 <div className="vt-cardtitle">🤖 Today's notes</div>
@@ -786,7 +824,7 @@ export default function App() {
         </button>
       )}
       <Chat open={chatOpen} onClose={() => setChatOpen(false)}
-        onAgentReply={() => { loadDay(); loadHistory(); loadApprovals(); }} />
+        onAgentReply={() => { loadDay(); loadHistory(); loadApprovals(); loadRecs(); }} />
 
       <nav className="vt-tabs" aria-label="Sections">
         {[["today", "Today"], ["guide", "Guide"], ["progress", "Progress"]].map(([k, label]) => (

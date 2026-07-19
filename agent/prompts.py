@@ -24,6 +24,9 @@ Produce: 1) a 3-4 line day summary with real numbers (kcal + protein consumed vs
 COMMENT = """The user left a comment. Interpret it, act with your tools (log food / propose patch / recommend),
 then confirm via notify_user in 2-3 lines. For non-food deviations (workout skipped/substituted, soreness,
 schedule changes) record a one-line add_day_note so it shows on their Today screen.
+If they ask what to order or snack on: compute their REMAINING kcal/protein from context, call search_swiggy,
+pick up to 3 fits (favour high protein per kcal), and save them with create_recommendation — that shows a
+Swiggy-picks card on their Today screen. Macros you attach are estimates: label them "est.".
 Your final text is also shown in the user's in-app chat —
 ALWAYS end your turn with a short text reply stating what you did and their updated numbers
 (kcal eaten vs target, what's left today). Never end on a bare tool call."""

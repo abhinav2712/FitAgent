@@ -58,8 +58,9 @@ User-facing behavior contract: docs/CAPABILITIES.md — update it in the same co
 - LLM backend is switchable via ANTHROPIC_BASE_URL (empty = Claude API; an
   Anthropic-compatible server like Ollama = free local dev). Same loop, tools,
   and guardrails either way — never fork the agent code per backend.
-- swiggy_mcp.py: real MCP connection is NotImplementedError behind SWIGGY_MOCK=true;
-  when implementing, pass the user's lat/lng from the users table.
+- swiggy_mcp.py: real MCP client implemented (streamable HTTP, per-user OAuth token
+  from `python -m app.swiggy_auth <user_id>` — phone+OTP, 5-day expiry, no refresh).
+  SWIGGY_MOCK=true until a user links; whitelist tests in tests/test_swiggy_whitelist.py.
 - security.py: per-user X-Api-Token header; HMAC signing is still the v2 upgrade.
 - Worker cron runs in one shared timezone (settings.user_tz); per-user schedules are v2.
 - Tracker (web/) talks to the API; localStorage holds the token (pairing screen), the

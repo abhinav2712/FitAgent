@@ -63,7 +63,13 @@
 **Goal:** 6 PM Telegram message with 3 dishes that fit your remaining macros.
 
 1. Runs day one with `SWIGGY_MOCK=true` — the mock dishes exercise the full flow (remaining-macro math → ranking → recommendation cards). Verify this first.
-2. Once Builders Club approves you: implement the real connection in `agent/swiggy_mcp.py` against their MCP tool schemas. **The `ALLOWED_TOOLS` whitelist stays search-only — this is the load-bearing safety property. Never register cart/order tools.**
+2. ✅ Done — real MCP client in `agent/swiggy_mcp.py` (streamable HTTP against
+   `https://mcp.swiggy.com/food`, per-user OAuth via `python -m app.swiggy_auth`).
+   **`ALLOWED_TOOLS` = {search_restaurants, search_menu, get_restaurant_menu} — the
+   load-bearing safety property, enforced by `_assert_allowed` before every network
+   call and locked by `tests/test_swiggy_whitelist.py` (all 9 cart/order/address
+   tools verified blocked). Never register cart/order tools.** To go live: link an
+   account (phone+OTP) and set SWIGGY_MOCK=false.
 3. Add dish-macro estimation guidance to the SWIGGY prompt (Indian restaurant portions run large; the agent should estimate conservatively and always label numbers "est.").
 4. Quality pass for a week: were the recommendations actually orderable, nearby, and macro-sane? Tune.
 

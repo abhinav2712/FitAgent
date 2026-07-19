@@ -29,11 +29,16 @@ behavior in code, change this file in the same commit.
 - At most **one** proposed adjustment for tomorrow, only if warranted
   (e.g. big activity day + undereating → add the optional dessert back).
 
-### 🍽 Dinner window (18:00)
-- Computes your **remaining** kcal/protein for the day, searches Swiggy
-  (mock until Builders Club approval), and sends the top 3 dishes with
-  estimated macros — always labelled "est." — and one-line reasoning.
+### 🍽 Dinner window (18:00) & on-demand picks
+- Computes your **remaining** kcal/protein for the day, searches Swiggy, and
+  saves the top 3 dishes with estimated macros — always labelled "est." — and
+  one-line reasoning. They appear as the **Swiggy picks card** on your Today
+  tab (and on Telegram if configured).
+- Ask anytime in chat ("recommend a healthy snack") — same flow, same card.
 - If you have <300 kcal left, it recommends *not* ordering.
+- Mock dishes until you link your Swiggy account
+  (`python -m app.swiggy_auth <user id>`, one-time phone+OTP; token lasts ~5
+  days). Live or mock, ordering stays structurally impossible.
 
 ---
 

@@ -33,7 +33,7 @@ TOOLS = [
      "input_schema": {"type": "object", "properties": {
          "query": {"type": "string"}}, "required": ["query"]}},
     {"name": "create_recommendation",
-     "description": "Persist tonight's order recommendations (max 3 items).",
+     "description": "Persist food-order recommendations (max 3 items) — dinner picks or healthy snacks — shown as a card on the user's Today screen. Items: [{restaurant, dish, est_kcal, est_protein, price, reason}]. Macros are your estimates — always mark them est.",
      "input_schema": {"type": "object", "properties": {
          "date": {"type": "string"},
          "items": {"type": "array", "items": {"type": "object"}},
@@ -123,7 +123,7 @@ def handle(user: dict, name: str, args: dict) -> str:
             return f"applied as plan version {row[0]}"
 
         if name == "search_swiggy":
-            return json.dumps(asyncio.run(swiggy_mcp.search_dishes(args["query"])))
+            return json.dumps(asyncio.run(swiggy_mcp.search_dishes(args["query"], user=user)))
 
         if name == "create_recommendation":
             db.execute(text("""

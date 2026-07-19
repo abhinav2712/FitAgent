@@ -46,7 +46,7 @@ Effort: **S** = an evening · **M** = a weekend · **L** = a week+
 
 | Idea | What & why | How it fits | Effort |
 |---|---|---|---|
-| **Real Swiggy MCP** | The one everything is staged for — pending Builders Club approval. `ALLOWED_TOOLS` whitelist assertion is already the law | Implement the client in `swiggy_mcp.py`; pass user lat/lng from the users table | M |
+| ~~**Real Swiggy MCP**~~ ✅ client shipped | Streamable-HTTP client + per-user OAuth linker (`app.swiggy_auth`) + whitelist tests. Remaining: each user links once (phone+OTP) and flips SWIGGY_MOCK=false; token re-link every ~5 days until Swiggy ships refresh tokens | Whitelist enforced by `_assert_allowed` before every call; user lat/lng passed from users table | M |
 | **Dish macro cache** | Once real menus flow: cache the agent's macro estimates per (restaurant, dish) so repeat recommendations are consistent and cheaper | New table keyed on restaurant+dish; estimates still labelled "est." | S |
 | **Instamart meal-prep list** | Sunday trend review outputs next week's grocery list matching the plan (read-only recommendation, like dishes) | Same MCP whitelist principles — search only | M |
 
