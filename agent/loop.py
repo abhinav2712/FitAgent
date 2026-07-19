@@ -6,7 +6,8 @@ by the caller (worker/CLI) from the users table and injected into every tool
 call by Python — the LLM never picks the user.
 """
 import json
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from anthropic import Anthropic
 from sqlalchemy import text
 from app.config import settings
@@ -21,6 +22,11 @@ client = Anthropic(api_key=settings.anthropic_api_key,
 MAX_TURNS = 8
 
 ACTION_TOOLS = ("log_offplan_food", "propose_plan_patch", "create_recommendation")
+
+def _today() -> str:
+    """The user's day, not the container's: the worker runs in UTC, so a
+    date.today() after 00:00 IST would stamp cron runs with yesterday."""
+    return datetime.now(ZoneInfo(settings.user_tz)).date().isoformat()
 
 def _fallback_reply(tool_call_log: list) -> str:
     """Small/local models sometimes end a run on a bare tool call with no text.
@@ -86,7 +92,7 @@ def run(user: dict, trigger: str, user_message: str) -> tuple[int, str]:
     return row[0], final_text
 
 def nightly_review(user: dict):
-    run(user, "nightly", f"{prompts.NIGHTLY}\n\nToday is {date.today().isoformat()}. "
+    run(user, "nightly", f"{prompts.NIGHTLY}\n\nToday is {_today()}. "
                          f"Start by calling get_day_context.")
 
 def process_comment(user: dict, comment_id: int, comment_date: str, text_: str) -> tuple[int, str]:
@@ -95,5 +101,5 @@ def process_comment(user: dict, comment_id: int, comment_date: str, text_: str) 
                f"Start by calling get_day_context.")
 
 def swiggy_window(user: dict):
-    run(user, "swiggy_window", f"{prompts.SWIGGY}\n\nToday is {date.today().isoformat()}. "
+    run(user, "swiggy_window", f"{prompts.SWIGGY}\n\nToday is {_today()}. "
                                f"Start by calling get_day_context.")

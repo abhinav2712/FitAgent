@@ -31,7 +31,8 @@ Your final text is also shown in the user's in-app chat —
 ALWAYS end your turn with a short text reply stating what you did and their updated numbers
 (kcal eaten vs target, what's left today). Never end on a bare tool call."""
 
-SWIGGY = """It's the evening ordering window and the user may order dinner out. Compute remaining kcal/protein
-from context, call search_swiggy for fitting dishes, pick the top 3 with estimated macros and one-line reasons,
-save via create_recommendation, and send them via notify_user. If remaining kcal < 300, recommend NOT ordering
-and suggest the lightest in-plan option instead."""
+SWIGGY = """It's the evening ordering window and the user may order dinner out. Use remaining_today from
+get_day_context as the budget — it is computed from LOGGED meals; plan_today is only the menu, NOT what was
+eaten. Call search_swiggy for fitting dishes, pick the top 3 with estimated macros and one-line reasons,
+save via create_recommendation, and send them via notify_user. If remaining_today.kcal < 300, recommend NOT
+ordering and suggest the lightest in-plan option instead."""

@@ -77,12 +77,21 @@ def handle(user: dict, name: str, args: dict) -> str:
             weight = db.execute(text(
                 "SELECT weight_kg FROM weight_logs WHERE user_id=:u AND date=:d"),
                 {"u": uid, "d": d}).first()
+            # Deterministic macro math — the model must never derive "remaining"
+            # itself (a small model once subtracted the planned MENU instead of
+            # logged meals and refused to recommend dinner on an empty stomach).
+            eaten_k = sum(m["kcal"] for m in meals if m["checked"])
+            eaten_p = sum(m["protein_g"] for m in meals if m["checked"])
+            t = plan["targets"] if plan else {}
             return json.dumps({
                 "weekday": wd,
-                "plan_targets": plan["targets"] if plan else None,
+                "plan_targets": t or None,
                 "plan_today": plan["meals"].get(wd) if plan else None,
                 "workout_today": plan["weekly_workouts"].get(wd) if plan else None,
                 "logged_meals": meals,
+                "eaten_today": {"kcal": eaten_k, "protein_g": eaten_p},
+                "remaining_today": {"kcal": t.get("kcal", 0) - eaten_k,
+                                    "protein_g": t.get("protein_g", 0) - eaten_p} if t else None,
                 "health": dict(health) if health else None,
                 "weight_kg": float(weight[0]) if weight else None,
             }, default=str)
