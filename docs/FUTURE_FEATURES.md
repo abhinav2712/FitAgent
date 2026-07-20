@@ -48,7 +48,8 @@ Effort: **S** = an evening · **M** = a weekend · **L** = a week+
 |---|---|---|---|
 | ~~**Real Swiggy MCP**~~ ✅ client shipped | Streamable-HTTP client + per-user OAuth linker (`app.swiggy_auth`) + whitelist tests. Remaining: each user links once (phone+OTP) and flips SWIGGY_MOCK=false; token re-link every ~5 days until Swiggy ships refresh tokens | Whitelist enforced by `_assert_allowed` before every call; user lat/lng passed from users table | M |
 | **Dish macro cache** | Once real menus flow: cache the agent's macro estimates per (restaurant, dish) so repeat recommendations are consistent and cheaper | New table keyed on restaurant+dish; estimates still labelled "est." | S |
-| **Instamart meal-prep list** | Sunday trend review outputs next week's grocery list matching the plan (read-only recommendation, like dishes) | Same MCP whitelist principles — search only | M |
+| ~~**Instamart snacks**~~ ✅ shipped | On-demand ("what should I stock up on") — brand/pack-size picks on their own card, chat-triggered | `search_instamart` + `INSTAMART_ALLOWED_TOOLS`, addressId resolved read-only via `get_addresses` | S |
+| **Instamart full meal-prep list** | Sunday trend review outputs next week's *whole grocery list* matching the plan (still one-off asks today, not a weekly auto-list) | Same whitelist; needs the weekly trend review (§2) to exist first | M |
 
 ## 5. Platform & robustness
 

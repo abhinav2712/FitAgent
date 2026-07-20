@@ -13,7 +13,7 @@ from agent import loop, notify
 # One definition of the user row the agent needs — _all_users and the comment
 # join both derive from it, so adding a column is a one-line change.
 USER_FIELDS = ("id", "name", "telegram_chat_id", "profile", "tz", "lat", "lng",
-               "swiggy_token", "swiggy_token_expires_at")
+               "location_label", "swiggy_token", "swiggy_token_expires_at")
 
 def _all_users():
     db = SessionLocal()

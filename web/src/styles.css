@@ -75,6 +75,13 @@ html, body { margin: 0; background: var(--ink); color: var(--text); font-family:
   cursor: pointer; margin-top: 10px; }
 .vt-send:disabled { opacity: 0.5; cursor: default; }
 
+/* Location picker */
+.vt-locbtn { background: transparent; border: 1px solid var(--line); color: var(--text);
+  font: 600 12.5px 'IBM Plex Sans', sans-serif; padding: 6px 12px; border-radius: 999px;
+  cursor: pointer; }
+.vt-loceditor { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px; margin-top: 8px; max-width: 420px; }
+
 /* Movement stat tiles */
 .vt-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
 .vt-stat { flex: 1; min-width: 130px; background: var(--ink); border: 1px solid var(--line);

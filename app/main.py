@@ -1,13 +1,14 @@
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from app.routers import health_webhook, logs, plan, recommendations
+from app.routers import health_webhook, logs, plan, recommendations, me
 
 app = FastAPI(title="FitAgent API", version="0.1.0")
 app.include_router(health_webhook.router, tags=["ingestion"])
 app.include_router(logs.router, tags=["ingestion"])
 app.include_router(plan.router, tags=["plan"])
 app.include_router(recommendations.router, tags=["recommendations"])
+app.include_router(me.router, tags=["me"])
 
 @app.get("/healthz")
 def healthz():

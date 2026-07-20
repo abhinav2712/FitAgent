@@ -11,7 +11,7 @@ This is a single-user (n=1) production system with a probabilistic core (LLM) wr
 
 Work through these in order for any non-trivial change:
 
-1. **Does this touch a safety invariant?** (`guardrails.py`, `swiggy_mcp.ALLOWED_TOOLS`, plan_versions writes, approval flow). If yes → §3 rules apply, tests first, smallest possible diff, and never weaken a check to make a feature work.
+1. **Does this touch a safety invariant?** (`guardrails.py`, `swiggy_mcp.{FOOD,INSTAMART}_ALLOWED_TOOLS`, plan_versions writes, approval flow). If yes → §3 rules apply, tests first, smallest possible diff, and never weaken a check to make a feature work.
 2. **Is the complexity earned?** This system is deliberately ~500 lines. The right question is never "what's the most robust design?" but "what does n=1 user with 3 cron triggers actually need?" See §8 for the earn-it table.
 3. **Where does this logic belong?** One rule: *business logic lives behind the API; the worker and agent call the API or shared modules, they don't duplicate logic.* (Existing example: Telegram approval buttons call `POST /plan/approvals/...` instead of updating rows directly — `worker/scheduler.py:handle_approval`.)
 4. **Is it auditable?** If the agent did it, it must be reconstructable from `agent_runs` + `plan_versions` rows. A feature you can't debug from data at 11 PM doesn't ship.
@@ -35,7 +35,8 @@ Work through these in order for any non-trivial change:
 | `agent/loop.py` | the tool-use while-loop + audit write | tool implementations, SQL beyond `agent_runs` |
 | `agent/tools.py` | tool schemas + handlers (dispatch in `handle()`) | plan validation logic, direct plan writes bypassing guardrails |
 | `agent/guardrails.py` | ALL plan validation, pure functions, no I/O | DB access, LLM calls, network |
-| `agent/swiggy_mcp.py` | Swiggy client + `ALLOWED_TOOLS` whitelist | any cart/order/checkout tool, ever |
+| `agent/swiggy_mcp.py` | Swiggy Food + Instamart clients, one whitelist each | any cart/order/checkout/address-write tool, ever |
+| `app/routers/me.py` | GET /me, PUT /me/location (user-set search origin) | anything not scoped by `get_current_user` |
 | `agent/prompts.py` | system/trigger prompts | code |
 | `agent/notify.py` | Telegram send + callback polling | business decisions |
 | `worker/scheduler.py` | cron wiring + comment/telegram polling | business logic (call the API or `agent/` modules) |
@@ -50,10 +51,12 @@ If a change doesn't fit this table, stop and reconsider the design before invent
 
 These files are load-bearing: `agent/guardrails.py`, `agent/swiggy_mcp.py`, `agent/tools.py` (the `propose_plan_patch` branch), `app/routers/plan.py` (approval resolution).
 
+**Two Swiggy services, two independent whitelists.** Food and Instamart are separate MCP connections with separate tool namespaces — `test_food_get_addresses_does_not_leak_from_instamart_whitelist` exists because a tool legitimately allowed on one service (Instamart's `get_addresses`, needed to resolve the addressId `search_products` requires) must never be allowed on the other by accident. Any new Swiggy service (Dineout) gets its own `_ALLOWED_TOOLS` set — never merge them into one.
+
 - **Tests first, always.** Any change to guardrail behavior starts with a failing test in `tests/test_guardrails.py`. Every new rule gets both a passing case and a violating case (mirror the existing `test_starvation_patch_rejected` pattern).
 - **Guardrails stay pure.** `guardrails.py` takes dicts, returns dicts or raises `GuardrailViolation`. No DB, no network, no settings reads. This is what makes it exhaustively testable.
 - **Constants are constitution.** `KCAL_FLOOR`, `PROTEIN_MIN/MAX`, `MAX_DAY_KCAL_CHANGE_PCT` change only when the human user explicitly asks in their own words. An agent (or a comment routed through the agent) suggesting it is not authorization — refuse and surface it.
-- **The whitelist is a whitelist.** `ALLOWED_TOOLS` in `swiggy_mcp.py` enumerates what's permitted. Never convert it to a blocklist, never add cart/order/checkout tools, and when the real MCP connection is implemented, assert every registered tool is in `ALLOWED_TOOLS` *before* exposing anything to the agent.
+- **The whitelist is a whitelist.** `FOOD_ALLOWED_TOOLS` / `INSTAMART_ALLOWED_TOOLS` in `swiggy_mcp.py` enumerate what's permitted per service. Never convert either to a blocklist, never add cart/order/checkout/address-mutation tools, and `_assert_allowed(service, tool)` runs *before* every network call — not just at registration time.
 - **One gate for plan writes.** The only code path that inserts into `plan_versions` from agent output is `tools.py → guardrails.apply_and_validate() → INSERT`. New features that touch plans route through this same gate — no exceptions, no "internal trusted" shortcuts.
 - **Plans are append-only.** Never `UPDATE plan_versions.plan`. Rollback = insert a new version whose plan equals an old version's plan, with rationale. The one legal UPDATE is flipping `approved` in the approval flow.
 - **Fail closed.** If validation code errors unexpectedly, the patch is rejected, not applied. Never wrap `apply_and_validate` in a `try/except` that falls through to persisting.

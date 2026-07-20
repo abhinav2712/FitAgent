@@ -63,15 +63,26 @@
 **Goal:** 6 PM Telegram message with 3 dishes that fit your remaining macros.
 
 1. Runs day one with `SWIGGY_MOCK=true` — the mock dishes exercise the full flow (remaining-macro math → ranking → recommendation cards). Verify this first.
-2. ✅ Done — real MCP client in `agent/swiggy_mcp.py` (streamable HTTP against
-   `https://mcp.swiggy.com/food`, per-user OAuth via `python -m app.swiggy_auth`).
-   **`ALLOWED_TOOLS` = {search_restaurants, search_menu, get_restaurant_menu} — the
-   load-bearing safety property, enforced by `_assert_allowed` before every network
-   call and locked by `tests/test_swiggy_whitelist.py` (all 9 cart/order/address
-   tools verified blocked). Never register cart/order tools.** To go live: link an
-   account (phone+OTP) and set SWIGGY_MOCK=false.
-3. Add dish-macro estimation guidance to the SWIGGY prompt (Indian restaurant portions run large; the agent should estimate conservatively and always label numbers "est.").
-4. Quality pass for a week: were the recommendations actually orderable, nearby, and macro-sane? Tune.
+2. ✅ Done — real MCP clients in `agent/swiggy_mcp.py` for **both** Food
+   (`https://mcp.swiggy.com/food`) and Instamart (`https://mcp.swiggy.com/im`,
+   13 tools — grocery/snack search, its own cart/checkout/address set), one
+   OAuth link via `python -m app.swiggy_auth` (shared token). **Each service
+   has its own whitelist — `FOOD_ALLOWED_TOOLS` / `INSTAMART_ALLOWED_TOOLS` —
+   enforced by `_assert_allowed(service, tool)` before every network call and
+   locked by `tests/test_swiggy_whitelist.py` (all dangerous tools on both
+   services verified blocked, including a test that a tool allowed on one
+   service can't leak into the other's gate). Never register cart/order/
+   address-mutation tools.** To go live: link an account (phone+OTP) and set
+   SWIGGY_MOCK=false.
+3. ✅ Done — dish/item macro estimation is guided in both prompts (SWIGGY and
+   COMMENT); numbers are always labelled "est."
+4. ✅ Done — user-set location (`PUT /me/location`, browser geolocation from
+   the tracker's header pill) replaces any hard-coded city; both services
+   search near wherever the user actually pins. Instamart's `search_products`
+   additionally needs a saved delivery address, resolved read-only via
+   `get_addresses` — if the linked Swiggy account has none, the agent tells
+   the user to add one in the Swiggy app rather than creating one itself.
+5. Quality pass for a week: were the recommendations actually orderable, nearby, and macro-sane? Tune.
 
 **Definition of done:** on a day the cook doesn't come, the 6 PM message alone is enough to decide dinner.
 

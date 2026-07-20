@@ -12,8 +12,9 @@ CREATE TABLE users (
     swiggy_token    TEXT,                 -- 5-day OAuth bearer from app.swiggy_auth (phone+OTP); read-only tools only
     swiggy_token_expires_at TIMESTAMPTZ,
     tz              TEXT DEFAULT 'Asia/Kolkata',   -- informational for now; cron runs in the worker tz
-    lat             NUMERIC(9,6),         -- for Swiggy search when the real MCP lands
+    lat             NUMERIC(9,6),         -- set by the user in-app (browser geolocation); used for Swiggy search
     lng             NUMERIC(9,6),
+    location_label  TEXT,                 -- freeform display text, e.g. "HSR Layout, Bengaluru" — not geocoded
     created_at      TIMESTAMPTZ DEFAULT now()
 );
 
@@ -100,7 +101,9 @@ CREATE TABLE recommendations (
     id              SERIAL PRIMARY KEY,
     user_id         INTEGER NOT NULL REFERENCES users(id),
     date            DATE NOT NULL,
-    items           JSONB NOT NULL,       -- [{restaurant, dish, est_kcal, est_protein, price, reason}]
+    kind            TEXT NOT NULL DEFAULT 'swiggy_food',  -- swiggy_food (restaurant dishes) | instamart_snack (grocery)
+    items           JSONB NOT NULL,       -- swiggy_food: [{restaurant, dish, est_kcal, est_protein, price, reason}]
+                                          -- instamart_snack: [{brand, item, pack_size, est_kcal, est_protein, price, reason}]
     remaining_kcal  INTEGER,
     remaining_protein INTEGER,
     agent_run_id    INTEGER REFERENCES agent_runs(id),

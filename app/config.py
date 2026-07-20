@@ -9,11 +9,12 @@ class Settings(BaseSettings):
     agent_model: str = "claude-sonnet-4-6"
     classifier_model: str = "claude-haiku-4-5-20251001"
     telegram_bot_token: str = ""       # one bot for all users; chat ids live in the users table
-    swiggy_mcp_url: str = "https://mcp.swiggy.com/food"  # Food MCP, streamable HTTP
+    swiggy_mcp_url: str = "https://mcp.swiggy.com/food"          # Food MCP, streamable HTTP
+    swiggy_instamart_mcp_url: str = "https://mcp.swiggy.com/im"  # Instamart MCP, streamable HTTP
     swiggy_mock: bool = True           # per-user OAuth tokens live on the users row
     user_tz: str = "Asia/Kolkata"      # worker cron timezone (shared; per-user tz is a v2 upgrade)
-    user_lat: float = 12.97            # Swiggy search fallback; per-user lat/lng live in users table
-    user_lng: float = 77.59
+    user_lat: float = 12.97            # Swiggy search fallback ONLY if a user never set their location
+    user_lng: float = 77.59            # in-app (see PUT /me/location); no city is hard-coded for real users
 
     class Config:
         env_file = ".env"

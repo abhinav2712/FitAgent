@@ -180,6 +180,50 @@ function StepsChart({ byDate }) {
   );
 }
 
+// Food items: {dish, restaurant, price, est_kcal, est_protein, reason}.
+// Instamart items: {item, brand, pack_size, price, est_kcal, est_protein, reason}.
+// Normalized to one shape so both recommendation kinds render through one card.
+function normalizeRecItem(it) {
+  return {
+    name: it.dish || it.item || it.name,
+    meta: it.restaurant || [it.brand, it.pack_size].filter(Boolean).join(" · "),
+    price: it.price, est_kcal: it.est_kcal, est_protein: it.est_protein, reason: it.reason,
+  };
+}
+
+function RecommendationCard({ icon, title, rec }) {
+  if (!rec || !(rec.items || []).length) return null;
+  return (
+    <section className="vt-card">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
+        <div className="vt-cardtitle">{icon} {title}</div>
+        {rec.remaining_kcal != null && (
+          <span className="vt-pill">{rec.remaining_kcal} kcal · {rec.remaining_protein}g P left when picked</span>
+        )}
+      </div>
+      {rec.items.map((raw, i) => {
+        const it = normalizeRecItem(raw);
+        return (
+          <div key={i} style={{ borderTop: i ? `1px solid ${C.line}` : "none", padding: "11px 0" }}>
+            <div className="vt-name" style={{ fontWeight: 600 }}>
+              {it.name}
+              {it.price != null && <span style={{ color: C.mute, fontWeight: 400 }}> · ₹{it.price}</span>}
+            </div>
+            <div className="vt-macros">
+              {it.meta}
+              {it.est_kcal != null && <> · est. {it.est_kcal} kcal · {it.est_protein}g P</>}
+            </div>
+            {it.reason && <div className="vt-cue" style={{ marginTop: 3 }}>{it.reason}</div>}
+          </div>
+        );
+      })}
+      <div className="vt-macros" style={{ marginTop: 6 }}>
+        Recommendations only — FitAgent can't place orders. Macros are estimates.
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("today");
   const [guideTab, setGuideTab] = useState("push");
@@ -194,7 +238,9 @@ export default function App() {
   const [weightInput, setWeightInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [approvals, setApprovals] = useState([]);
-  const [recs, setRecs] = useState({ items: [] });
+  const [recs, setRecs] = useState({ food: null, instamart: null });
+  const [me, setMe] = useState(null); // {name, lat, lng, location_label}
+  const [locationOpen, setLocationOpen] = useState(false);
 
   const tKey = todayKey();
   const wdKey = weekdayKeyOf(tKey);
@@ -207,6 +253,8 @@ export default function App() {
     api.approvals().then(({ data }) => setApprovals(data)).catch(() => {});
   const loadRecs = () =>
     api.recommendations(tKey).then(({ data }) => setRecs(data)).catch(() => {});
+  const loadMe = () =>
+    api.me().then(({ data }) => setMe(data)).catch(() => {});
 
   // Same endpoint the Telegram buttons hit — ownership enforced server-side.
   // The plan may change on approve, so reload everything plan-shaped after.
@@ -217,6 +265,30 @@ export default function App() {
     loadApprovals();
     api.activePlan().then(({ data }) => setPlan(data.plan)).catch(() => {});
     api.planHistory().then(({ data }) => setPlanVersions(data)).catch(() => {});
+  };
+
+  // Browser geolocation, not a hard-coded city — Swiggy search happens near
+  // wherever the user actually is. label is just for display; lat/lng drive search.
+  const [locStatus, setLocStatus] = useState("idle"); // idle | locating | saving | error
+  const [locLabelInput, setLocLabelInput] = useState("");
+  const useMyLocation = () => {
+    if (!navigator.geolocation) { setLocStatus("error"); return; }
+    setLocStatus("locating");
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        setLocStatus("saving");
+        try {
+          await api.setLocation(coords.latitude, coords.longitude, locLabelInput.trim() || null);
+          await loadMe();
+          setLocationOpen(false);
+          setLocStatus("idle");
+        } catch {
+          setLocStatus("error");
+        }
+      },
+      () => setLocStatus("error"),
+      { timeout: 10000 }
+    );
   };
 
   useEffect(() => {
@@ -230,7 +302,7 @@ export default function App() {
         setPlan(planDoc.plan);
         setOffline(fromCache);
         migrateLegacyData(planDoc.plan);
-        await Promise.all([loadDay(), loadHistory(), loadApprovals(), loadRecs()]);
+        await Promise.all([loadDay(), loadHistory(), loadApprovals(), loadRecs(), loadMe()]);
         setStatus("ready");
       } catch (e) {
         setStatus(e instanceof AuthError ? "pair" : "error");
@@ -443,6 +515,38 @@ export default function App() {
               {offline && <span className="vt-pill" style={{ color: C.saff }}>showing last synced data</span>}
             </div>
           )}
+          {tab === "today" && (
+            <div style={{ marginTop: 8 }}>
+              <button className="vt-locbtn" onClick={() => {
+                if (!locationOpen) setLocLabelInput(me?.location_label || "");
+                setLocationOpen((o) => !o);
+              }}>
+                📍 {me?.location_label || (me?.lat != null ? "Location set" : "Set your location")}
+                <span style={{ color: C.mute }}> · change</span>
+              </button>
+              {locationOpen && (
+                <div className="vt-loceditor">
+                  <div className="vt-cue">
+                    Used to find nearby Swiggy restaurants and Instamart stores — never guessed or hard-coded.
+                  </div>
+                  <input className="vt-weightin" style={{ width: "100%", marginTop: 8 }}
+                    type="text" placeholder="Label, e.g. HSR Layout, Bengaluru"
+                    value={locLabelInput} onChange={(e) => setLocLabelInput(e.target.value)} />
+                  <div style={{ display: "flex", gap: 10, marginTop: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <button className="vt-send" style={{ marginTop: 0 }}
+                      disabled={locStatus === "locating" || locStatus === "saving"} onClick={useMyLocation}>
+                      {locStatus === "locating" ? "Locating…" : locStatus === "saving" ? "Saving…" : "📍 Use my current location"}
+                    </button>
+                    {locStatus === "error" && (
+                      <span className="vt-pill" style={{ color: C.red }}>
+                        Couldn't get location — check browser permission and retry
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </header>
 
         {tab === "today" && (
@@ -553,39 +657,8 @@ export default function App() {
               ))}
             </section>
 
-            {(recs.items || []).length > 0 && (
-              <section className="vt-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
-                  <div className="vt-cardtitle">🍽 Swiggy picks</div>
-                  {recs.remaining_kcal != null && (
-                    <span className="vt-pill">
-                      {recs.remaining_kcal} kcal · {recs.remaining_protein}g P left when picked
-                    </span>
-                  )}
-                </div>
-                {recs.items.map((it, i) => (
-                  <div key={i} style={{ borderTop: i ? `1px solid ${C.line}` : "none",
-                    padding: "11px 0" }}>
-                    <div className="vt-name" style={{ fontWeight: 600 }}>
-                      {it.dish || it.name}
-                      {it.price != null && (
-                        <span style={{ color: C.mute, fontWeight: 400 }}> · ₹{it.price}</span>
-                      )}
-                    </div>
-                    <div className="vt-macros">
-                      {it.restaurant}
-                      {it.est_kcal != null && <> · est. {it.est_kcal} kcal · {it.est_protein}g P</>}
-                    </div>
-                    {it.reason && (
-                      <div className="vt-cue" style={{ marginTop: 3 }}>{it.reason}</div>
-                    )}
-                  </div>
-                ))}
-                <div className="vt-macros" style={{ marginTop: 6 }}>
-                  Recommendations only — FitAgent can't place orders. Macros are estimates.
-                </div>
-              </section>
-            )}
+            <RecommendationCard icon="🍽" title="Swiggy picks" rec={recs.food} />
+            <RecommendationCard icon="🛒" title="Instamart — snacks to stock up on" rec={recs.instamart} />
 
             {(day.notes || []).length > 0 && (
               <section className="vt-card">

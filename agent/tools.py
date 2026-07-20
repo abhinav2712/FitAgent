@@ -29,17 +29,22 @@ TOOLS = [
          "patch": {"type": "array", "items": {"type": "object"}},
          "rationale": {"type": "string"}}, "required": ["patch", "rationale"]}},
     {"name": "search_swiggy",
-     "description": "Search nearby Swiggy dishes (READ-ONLY — ordering is impossible). Returns dishes with price and description; you estimate macros.",
+     "description": "Search nearby Swiggy restaurant dishes for delivery, one meal at a time (READ-ONLY — ordering is impossible). Returns dishes with restaurant, price, and description; you estimate macros.",
+     "input_schema": {"type": "object", "properties": {
+         "query": {"type": "string"}}, "required": ["query"]}},
+    {"name": "search_instamart",
+     "description": "Search Swiggy Instamart for packaged/grocery snack items to keep on hand — protein bars, roasted snacks, yogurt cups, nuts (READ-ONLY — ordering is impossible). Use for 'what should I stock up on' style asks, not a single meal. Returns items with brand, pack size, price, description; you estimate macros.",
      "input_schema": {"type": "object", "properties": {
          "query": {"type": "string"}}, "required": ["query"]}},
     {"name": "create_recommendation",
-     "description": "Persist food-order recommendations (max 3 items) — dinner picks or healthy snacks — shown as a card on the user's Today screen. Items: [{restaurant, dish, est_kcal, est_protein, price, reason}]. Macros are your estimates — always mark them est.",
+     "description": "Persist food recommendations (max 3 items) shown as a card on the user's Today screen. kind='swiggy_food' for restaurant dishes (items: [{restaurant, dish, est_kcal, est_protein, price, reason}]) or kind='instamart_snack' for grocery/pantry items (items: [{brand, item, pack_size, est_kcal, est_protein, price, reason}]). Macros are your estimates — always mark them est.",
      "input_schema": {"type": "object", "properties": {
          "date": {"type": "string"},
+         "kind": {"type": "string", "enum": ["swiggy_food", "instamart_snack"]},
          "items": {"type": "array", "items": {"type": "object"}},
          "remaining_kcal": {"type": "integer"},
          "remaining_protein": {"type": "integer"}},
-         "required": ["date", "items", "remaining_kcal", "remaining_protein"]}},
+         "required": ["date", "kind", "items", "remaining_kcal", "remaining_protein"]}},
     {"name": "notify_user",
      "description": "Send the user a Telegram message. Use Markdown, keep it short.",
      "input_schema": {"type": "object", "properties": {
@@ -134,14 +139,18 @@ def handle(user: dict, name: str, args: dict) -> str:
         if name == "search_swiggy":
             return json.dumps(asyncio.run(swiggy_mcp.search_dishes(args["query"], user=user)))
 
+        if name == "search_instamart":
+            return json.dumps(asyncio.run(swiggy_mcp.search_grocery_items(args["query"], user=user)))
+
         if name == "create_recommendation":
+            kind = args.get("kind", "swiggy_food")
             db.execute(text("""
-                INSERT INTO recommendations (user_id, date, items, remaining_kcal, remaining_protein)
-                VALUES (:u, :d, CAST(:i AS jsonb), :k, :p)
-            """), {"u": uid, "d": args["date"], "i": json.dumps(args["items"][:3]),
-                   "k": args["remaining_kcal"], "p": args["remaining_protein"]})
+                INSERT INTO recommendations (user_id, date, kind, items, remaining_kcal, remaining_protein)
+                VALUES (:u, :d, :k, CAST(:i AS jsonb), :rk, :rp)
+            """), {"u": uid, "d": args["date"], "k": kind, "i": json.dumps(args["items"][:3]),
+                   "rk": args["remaining_kcal"], "rp": args["remaining_protein"]})
             db.commit()
-            return "recommendation saved"
+            return f"{kind} recommendation saved"
 
         if name == "notify_user":
             notify.send(user["telegram_chat_id"], args["text"])

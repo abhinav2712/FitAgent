@@ -28,3 +28,8 @@ class WeightIn(BaseModel):
 class CommentIn(BaseModel):
     date: Date
     text: str
+
+class LocationIn(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    label: str | None = None   # freeform display text, e.g. "HSR Layout, Bengaluru"
