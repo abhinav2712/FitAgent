@@ -39,7 +39,7 @@ def log_comment(c: CommentIn, db: Session = Depends(get_db),
         "INSERT INTO comments (user_id, date, text) VALUES (:user_id, :date, :text)"),
         {**c.model_dump(), "user_id": user["id"]})
     db.commit()
-    return {"ok": True, "note": "agent will process this within ~30s"}
+    return {"ok": True, "note": "agent will pick this up within ~5s and stream its reply live"}
 
 @router.get("/log/day/{d}")
 def day_log(d: Date, db: Session = Depends(get_db),
@@ -95,8 +95,10 @@ def log_history(days: int = 21, db: Session = Depends(get_db),
 def chat_history(limit: int = 30, db: Session = Depends(get_db),
                  user: dict = Depends(get_current_user)):
     """Comment thread with agent replies (via comments.agent_run_id), oldest
-    first — feeds the in-app chat panel. Replies appear once the worker has
-    processed the comment (~30s poll)."""
+    first — feeds the in-app chat panel as the durable/reconciliation source.
+    Live progress and token-by-token text arrive first over GET /log/chat/stream
+    (agent/chat_stream.py); this is what backfills if that connection was
+    missed or the panel wasn't open."""
     rows = db.execute(text("""
         SELECT c.id, c.date, c.text, c.processed, c.created_at,
                r.output_text AS reply

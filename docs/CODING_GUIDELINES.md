@@ -39,6 +39,8 @@ Work through these in order for any non-trivial change:
 | `app/routers/me.py` | GET /me, PUT /me/location (user-set search origin) | anything not scoped by `get_current_user` |
 | `agent/prompts.py` | system/trigger prompts | code |
 | `agent/notify.py` | Telegram send + callback polling | business decisions |
+| `agent/chat_stream.py` | Publish live run events (Postgres NOTIFY) + tool→label map | invoking the agent — publish-only |
+| `app/routers/chat_stream.py` | SSE endpoint relaying published events (raw psycopg2 LISTEN, not `Depends(get_db)`) | anything that calls the agent |
 | `worker/scheduler.py` | cron wiring + comment/telegram polling | business logic (call the API or `agent/` modules) |
 | `db/schema.sql` | the schema, single source of truth | — |
 | `web/` | V-Taper Log SPA (React/Vite), built to `web/dist`, served by FastAPI | business rules, macro math the server owns, direct DB anything |
@@ -104,10 +106,12 @@ These files are load-bearing: `agent/guardrails.py`, `agent/swiggy_mcp.py`, `age
 5. Test: guardrail-adjacent tools get unit tests; others at minimum get exercised via a manual trigger run (`docker compose exec worker python -c "from agent.loop import nightly_review; nightly_review()"`) with the resulting `agent_runs.tool_calls` inspected.
 
 **Loop rules** (`agent/loop.py`):
-- Keep it small and boring — it's ~80 lines on purpose and it's the artifact this project is judged on. Resist adding retries, streaming, parallel tool dispatch, or sub-agents unless a real observed failure demands it.
+- Keep it small and boring — it's ~90 lines on purpose and it's the artifact this project is judged on. Resist adding retries, parallel tool dispatch, or sub-agents unless a real observed failure demands it.
+- **Token streaming is the one exception, and it's deliberate**: each turn calls `client.messages.stream(...)` + `stream.get_final_message()` instead of `.create(...)` so an optional `on_event` hook can emit live `delta`/`activity`/`done` events for the chat UI (see `agent/chat_stream.py`). This changed *how one call's response arrives*, not the loop's control flow — turn order, `MAX_TURNS`, and tool dispatch are untouched. Don't read this as license for retries/parallel dispatch/sub-agents; those still need a real observed failure.
 - Every invocation writes exactly one `agent_runs` row, even on failure (if you add failure paths, they still land the audit row — wrap accordingly).
 - Tool results in the audit log stay truncated (`out[:500]`) — the full result went to the model, the audit needs the gist.
 - `MAX_TURNS` is the runaway-cost brake. Raising it needs a cost note.
+- **Live delivery ≠ a second agent path.** `on_event` only *publishes* what this same loop already did (via Postgres NOTIFY); nothing subscribes to it to invoke the agent. The invariant in CLAUDE.md ("never add a second/synchronous agent endpoint for chat") is about invocation, not about who's allowed to watch a run in progress.
 
 **Prompt rules:** prompts state facts and constraints, not safety enforcement — safety lives in code (whitelist + guardrails), so never justify a code-level check's removal with "the prompt covers it." Restaurant-food macros are always labelled "est." in anything user-facing; keep that instruction in the SWIGGY prompt.
 
@@ -142,7 +146,7 @@ Current answers are correct at n=1. Change them only when the trigger condition 
 
 | Keep (today) | Upgrade to | Only when |
 |---|---|---|
-| 30s comment polling | Postgres LISTEN/NOTIFY | latency complaints, or polling load is measurable |
+| ~~30s comment polling~~ | ✅ done — worker picks up at 5s, live delivery via Postgres NOTIFY once picked up | — |
 | APScheduler in one worker | queue (e.g. RQ) | jobs overlap/miss, or >1 worker needed |
 | Per-user API tokens | HMAC signing / rotation | public internet exposure beyond the trusted circle |
 | One shared cron timezone | per-user schedules | a user in another timezone actually joins |

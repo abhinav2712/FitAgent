@@ -96,10 +96,10 @@ def main():
     sched = BackgroundScheduler(timezone=settings.user_tz)
     sched.add_job(nightly_all, "cron", hour=22, minute=0)
     sched.add_job(swiggy_all, "cron", hour=18, minute=0)
-    sched.add_job(process_new_comments, "interval", seconds=30)
+    sched.add_job(process_new_comments, "interval", seconds=5)
     sched.start()
     threading.Thread(target=telegram_thread, daemon=True).start()
-    print("[worker] up — nightly 22:00, swiggy 18:00, comments every 30s (all users)")
+    print("[worker] up — nightly 22:00, swiggy 18:00, comments every 5s (all users)")
     while True:
         time.sleep(60)
 

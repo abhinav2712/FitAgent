@@ -1,17 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import { api } from "./api.js";
+import { api, getToken } from "./api.js";
 import { todayKey } from "./content.js";
 
 // Floating FitAgent chat. Messages are ordinary comments (POST /log/comment —
-// the agent's inbox); replies come from the worker's agent run, surfaced via
-// GET /log/chat. The panel polls while open, so a reply lands ~30s after send
-// (the worker's comment-poll interval). Same message also arrives on Telegram.
+// the agent's inbox); the worker (still the only thing that ever invokes the
+// agent — same as before) picks them up on its own poll and streams live
+// progress over GET /log/chat/stream (SSE: activity/delta/done events) while
+// this panel is open. GET /log/chat (agent_runs) is the durable source and a
+// reconciliation fallback if the stream was missed or never connected.
+//
+// Native EventSource can't send the X-Api-Token header, so this hand-rolls
+// SSE parsing over fetch()'s ReadableStream — same reason Con-Mon's guide
+// gives for using fetch streaming instead of EventSource when auth is on.
 export default function Chat({ open, onClose, onAgentReply }) {
   const [thread, setThread] = useState([]);
   const [draft, setDraft] = useState("");
   const [queued, setQueued] = useState(false);
+  // live[comment_id] = { activity: "Checking your day"|null, text: "accumulated delta text" }
+  const [live, setLive] = useState({});
   const endRef = useRef(null);
   const seenReplies = useRef(null); // null until first load — don't fire onAgentReply for old replies
+  const abortRef = useRef(null);
 
   const load = async () => {
     try {
@@ -24,10 +33,63 @@ export default function Chat({ open, onClose, onAgentReply }) {
         replied.forEach((id) => seenReplies.current.add(id));
         onAgentReply(); // agent may have logged food / patched the plan — refresh
       }
+      // Reconciled from the durable source — drop any stale live buffer.
+      setLive((cur) => {
+        const next = { ...cur };
+        for (const m of data) if (m.reply) delete next[m.id];
+        return next;
+      });
     } catch {
       /* offline — keep whatever is shown */
     }
   };
+
+  // One SSE connection for as long as the panel is open, independent of any
+  // single message — events carry their own comment_id so late-open still
+  // catches whichever run is in flight.
+  useEffect(() => {
+    if (!open) return;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    (async () => {
+      try {
+        const res = await fetch("/log/chat/stream", {
+          headers: { "X-Api-Token": getToken() },
+          signal: ctrl.signal,
+        });
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const frames = buf.split("\n\n");
+          buf = frames.pop(); // last chunk may be incomplete — keep for next read
+          for (const frame of frames) {
+            const line = frame.split("\n").find((l) => l.startsWith("data: "));
+            if (!line) continue; // keep-alive/comment frames have no "data:" line
+            let ev;
+            try { ev = JSON.parse(line.slice(6)); } catch { continue; }
+            const id = ev.comment_id;
+            setLive((cur) => {
+              const prior = cur[id] || { activity: null, text: "" };
+              if (ev.type === "activity") return { ...cur, [id]: { ...prior, activity: ev.label || ev.tool } };
+              if (ev.type === "delta") return { ...cur, [id]: { activity: null, text: prior.text + ev.text } };
+              if (ev.type === "done") {
+                load(); // pull the durable row (and trigger onAgentReply if new)
+                return { ...cur, [id]: { activity: null, text: ev.text } };
+              }
+              return cur;
+            });
+          }
+        }
+      } catch {
+        /* connection dropped/aborted — the 4s poll below still gets replies */
+      }
+    })();
+    return () => ctrl.abort();
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +100,7 @@ export default function Chat({ open, onClose, onAgentReply }) {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [thread, open]);
+  }, [thread, live, open]);
 
   const send = async () => {
     const text = draft.trim();
@@ -59,7 +121,7 @@ export default function Chat({ open, onClose, onAgentReply }) {
             <div className="vt-cardtitle">🤖 FitAgent</div>
             <div className="vt-chat-sub">
               Tell it what happened — it rebalances your day or suggests how to hit
-              the target. Replies here and on Telegram in ~30s.
+              the target. Streams live here, and replies on Telegram too.
             </div>
           </div>
           <button className="vt-chat-close" onClick={onClose} aria-label="Close chat">✕</button>
@@ -71,18 +133,25 @@ export default function Chat({ open, onClose, onAgentReply }) {
               tomorrow's push day" · "what should I eat tonight to hit my protein?"
             </div>
           )}
-          {thread.map((m) => (
-            <div key={m.id} className="vt-msg">
-              <div className="vt-bubble user">{m.text}</div>
-              {m.reply ? (
-                <div className="vt-bubble agent">{m.reply}</div>
-              ) : m.processed ? (
-                <div className="vt-bubble agent thinking">✓ processed — check the Today tab for changes</div>
-              ) : (
-                <div className="vt-bubble agent thinking">FitAgent is thinking…</div>
-              )}
-            </div>
-          ))}
+          {thread.map((m) => {
+            const l = live[m.id];
+            return (
+              <div key={m.id} className="vt-msg">
+                <div className="vt-bubble user">{m.text}</div>
+                {m.reply ? (
+                  <div className="vt-bubble agent">{m.reply}</div>
+                ) : l?.text ? (
+                  <div className="vt-bubble agent">{l.text}</div>
+                ) : l?.activity ? (
+                  <div className="vt-bubble agent thinking">🔎 {l.activity}…</div>
+                ) : m.processed ? (
+                  <div className="vt-bubble agent thinking">✓ processed — check the Today tab for changes</div>
+                ) : (
+                  <div className="vt-bubble agent thinking">FitAgent is thinking…</div>
+                )}
+              </div>
+            );
+          })}
           <div ref={endRef} />
         </div>
         {queued && (

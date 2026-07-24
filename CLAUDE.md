@@ -20,10 +20,13 @@ iPhone Shortcut → POST /webhook/health → Postgres ← POST /log/* ← tracke
 (`web/` — React/Vite SPA, built to web/dist and served by FastAPI at `/`, same origin, no CORS).
 Multi-user: every request carries a per-user X-Api-Token (users table; minted by
 `app.create_user`); every table row has user_id; cron triggers fan out over all users.
-Worker triggers agent (nightly 22:00, swiggy 18:00, comment poll 30s).
+Worker triggers agent (nightly 22:00, swiggy 18:00, comment poll 5s).
 Agent = `agent/loop.py` while-loop over tools in `agent/tools.py`.
 The tracker's 🤖 chat IS the comments pipeline: messages → POST /log/comment, worker
 links each comment to its agent_runs row, replies surface via GET /log/chat (+ Telegram).
+While the worker's run is in flight it also publishes live activity/text-delta events
+over Postgres NOTIFY (`agent/chat_stream.py`), relayed to the browser over SSE
+(`GET /log/chat/stream`) — a watch-only tap, not a second invocation path.
 Never add a second/synchronous agent endpoint for chat.
 Plan changes = RFC6902 patches → `agent/guardrails.py` validation → auto-apply or
 Telegram approval. Swiggy via `agent/swiggy_mcp.py` (mock until Builders Club approval).

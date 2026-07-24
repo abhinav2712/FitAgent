@@ -36,7 +36,7 @@ Effort: **S** = an evening · **M** = a weekend · **L** = a week+
 | Idea | What & why | How it fits | Effort |
 |---|---|---|---|
 | ~~**Plan history screen**~~ ✅ shipped | `GET /plan/history` + the "Plan history" card in the Progress tab: versions, patches, rationales, approval state | Read-only endpoint over `plan_versions`; append-only design made this free | S |
-| **Instant chat pickup** | Postgres LISTEN/NOTIFY instead of the 30s comment poll — replies in ~2s. Only when the latency actually annoys (earn-it table) | Worker listens; API `NOTIFY`s on comment insert | S |
+| ~~**Instant chat pickup**~~ ✅ shipped | Worker poll dropped to 5s; once picked up, the reply **token-streams live** over SSE (`GET /log/chat/stream`) via Postgres NOTIFY — `activity` events per tool call, `delta` events per text chunk, `done` at the end. Poll-based `GET /log/chat` stays as the durable reconciliation source | `agent/chat_stream.py` (publish) + `app/routers/chat_stream.py` (relay); one agent invocation path preserved — SSE only watches, never triggers | S |
 | **Voice notes** | Speak instead of type after a workout; transcribe → normal comment pipeline | Audio upload + transcription call in front of `/log/comment`; everything downstream unchanged | M |
 | **WhatsApp delivery** (v2 list) | Meta Cloud API instead of/alongside Telegram — where the rest of life already happens | `notify.py` grows a second transport behind the same `send(user, ...)` signature | M |
 | **PWA + push notifications** | Install the tracker to the home screen; digest arrives as a push even with the app closed | Manifest + service worker; web-push keys; replaces nothing, adds a channel | M |

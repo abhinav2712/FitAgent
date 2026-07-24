@@ -8,7 +8,7 @@ behavior in code, change this file in the same commit.
 
 ## What it does, by trigger
 
-### 💬 When you message it (🤖 chat in the tracker, ~30s reply)
+### 💬 When you message it (🤖 chat in the tracker, picked up within ~5s and streamed live)
 - **Understands plain language**: "skipped lunch, ate 2 samosas at office",
   "shoulder hurts, swap tomorrow's push day", "cook didn't come", "what should
   I eat tonight to hit my protein?"
@@ -79,7 +79,11 @@ structurally impossible for both services.
 
 ## Current limitations (honest list)
 
-- Replies take up to ~30s (worker polls comments on that interval).
+- The worker picks up a new message within ~5s, then the reply streams in
+  live (word-by-word, plus "checking your day" / "logging that" style
+  progress) while the panel is open. If the panel wasn't open or the
+  connection dropped, the finished reply still appears on the next
+  reconciliation poll — nothing is lost, only the live typing effect is missed.
 - Swiggy results are mock dishes/items until you link your Swiggy account.
 - Instamart search needs a saved delivery address on your Swiggy account (the
   agent looks it up, read-only — it never adds one for you).

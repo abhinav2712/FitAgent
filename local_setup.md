@@ -37,7 +37,7 @@ First visit shows a pairing screen: paste your API token (each person pastes the
 Then walk the flow end to end:
 
 Check off a meal / enter weight in the Today tab → lands in Postgres immediately.
-Tap the floating 🤖 button and chat: "skipped lunch, ate 2 samosas at office" → within ~30s the worker picks it up, the agent logs the samosas as an off-plan row, the reply appears in the chat (and on Telegram), and your plate + fuel gauges refresh with the rebalanced day. Watch it think:
+Tap the floating 🤖 button and chat: "skipped lunch, ate 2 samosas at office" → within ~5s the worker picks it up and the reply starts streaming live word-by-word in the chat (plus "checking your day" style progress), the agent logs the samosas as an off-plan row, and your plate + fuel gauges refresh with the rebalanced day. Also lands on Telegram. Watch it think:
 
 docker compose logs -f worker
 Simulate the iPhone (the health webhook, normally sent by the Shortcut at 9:30 PM):
