@@ -22,7 +22,7 @@ and recommends macro-fitting dishes from **Swiggy Food & Instamart** — *it rec
 <p align="center"><img src="docs/screenshot.png" width="720" alt="FitAgent tracker"></p>
 -->
 
-> 📹 **Demo:** _paste your walkthrough link here_
+> 📹 **Demo: https://drive.google.com/file/d/1AvRd6IpKSmJjPakAlFD6Kvvm0u6tPYBr/view
 
 ---
 
