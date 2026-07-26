@@ -8,10 +8,14 @@ class WorkoutIn(BaseModel):
     avg_pace_min_per_km: float | None = None
 
 class HealthPayload(BaseModel):
+    # All optional and defaulting to None (NOT 0) so a payload can carry just
+    # one metric — e.g. a steps-only Shortcut and a calories-only Shortcut each
+    # update their own field without the second clobbering the first. The
+    # webhook COALESCEs: a missing field leaves the stored value untouched.
     date: Date
-    steps: int = 0
-    active_kcal: int = 0
-    workouts: list[WorkoutIn] = Field(default_factory=list)
+    steps: int | None = None
+    active_kcal: int | None = None
+    workouts: list[WorkoutIn] | None = None
 
 class MealLogIn(BaseModel):
     date: Date

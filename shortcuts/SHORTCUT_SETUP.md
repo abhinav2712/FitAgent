@@ -23,9 +23,20 @@ the server knows whose data is arriving.
      ```
 6. Run it once manually → check `docker compose logs api` shows a 200.
 
+## One Shortcut or several — both work
+The single Shortcut above sends everything at once. But if you find it easier to
+build **separate Shortcuts** (one for steps, one for Active Energy), that's fine —
+the webhook does a **partial merge** per `(user, date)`: each field only updates
+when the payload carries a real value, and a field sent as `0` (an undefined
+variable in a single-metric Shortcut) is treated as "no reading" and leaves the
+stored value untouched. So a steps-only Shortcut and a calories-only Shortcut no
+longer overwrite each other — send whichever subset each Shortcut can gather. An
+explicit non-zero always wins; re-sending the same payload is a no-op.
+
 ## Automate it
 Shortcuts → Automation → + → Time of Day → 9:30 PM daily → Run "FitAgent Sync"
-→ turn OFF "Ask Before Running".
+→ turn OFF "Ask Before Running". (If you split into several Shortcuts, give each
+its own automation, or chain them with **Run Shortcut** actions.)
 
 ## Test payload (no phone needed)
 ```bash
