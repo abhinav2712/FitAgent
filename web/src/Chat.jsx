@@ -2,6 +2,26 @@ import React, { useEffect, useRef, useState } from "react";
 import { api, getToken } from "./api.js";
 import { todayKey } from "./content.js";
 
+// Tiny markdown for the subset the agent actually emits — **bold** and
+// *italic*. Newlines are already handled by the bubble's white-space:pre-wrap,
+// so everything else (including line breaks and emoji) passes through verbatim.
+// Deliberately no markdown library: this is the whole grammar we use.
+function renderRich(text) {
+  if (!text) return text;
+  const out = [];
+  const re = /\*\*(.+?)\*\*|\*(.+?)\*/g; // bold tried first, then italic
+  let last = 0, m, k = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(m[1] !== undefined
+      ? <strong key={k++}>{m[1]}</strong>
+      : <em key={k++}>{m[2]}</em>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
 // Floating FitAgent chat. Messages are ordinary comments (POST /log/comment —
 // the agent's inbox); the worker (still the only thing that ever invokes the
 // agent — same as before) picks them up on its own poll and streams live
@@ -139,9 +159,9 @@ export default function Chat({ open, onClose, onAgentReply }) {
               <div key={m.id} className="vt-msg">
                 <div className="vt-bubble user">{m.text}</div>
                 {m.reply ? (
-                  <div className="vt-bubble agent">{m.reply}</div>
+                  <div className="vt-bubble agent">{renderRich(m.reply)}</div>
                 ) : l?.text ? (
-                  <div className="vt-bubble agent">{l.text}</div>
+                  <div className="vt-bubble agent">{renderRich(l.text)}</div>
                 ) : l?.activity ? (
                   <div className="vt-bubble agent thinking">🔎 {l.activity}…</div>
                 ) : m.processed ? (
