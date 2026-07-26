@@ -20,7 +20,11 @@
       "Bash(python3 -m json.tool)",
       "Bash(git add *)",
       "Bash(git commit -q -m ' *)",
-      "Bash(sed -i '' 's|docker compose exec api python -m app.create_user \"Abhi\" --chat-id 123456789$|docker compose exec api python -m app.create_user \"Abhi\" --chat-id 123456789 --profile \"23M, 175cm, cutting 76->68kg\"|' local_setup.md README.md)"
+      "Bash(sed -i '' 's|docker compose exec api python -m app.create_user \"Abhi\" --chat-id 123456789$|docker compose exec api python -m app.create_user \"Abhi\" --chat-id 123456789 --profile \"23M, 175cm, cutting 76->68kg\"|' local_setup.md README.md)",
+      "Bash(curl -sf localhost:8000/healthz)",
+      "Bash(break)",
+      "Bash(curl -s -H 'X-Api-Token: __CMDSUB_OUTPUT__' localhost:8000/me)",
+      "Bash(curl -s -X PUT -H 'X-Api-Token: __CMDSUB_OUTPUT__' -H 'Content-Type: application/json' -d '{\"lat\": 12.9116, \"lng\": 77.6389, \"label\": \"HSR Layout, Bengaluru\"}' localhost:8000/me/location)"
     ]
   }
 }
