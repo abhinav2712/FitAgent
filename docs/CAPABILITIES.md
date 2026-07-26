@@ -44,8 +44,10 @@ behavior in code, change this file in the same commit.
   estimated macros — on a separate **Instamart card**.
 - Same guardrails as Food: read-only search, "est." macros, no ordering.
 
-Both use your **saved location** (set in-app — never hard-coded) to search
-near you. Mock catalog until you link your Swiggy account
+Live searches on both services anchor to your **most-recent saved Swiggy
+delivery address** (looked up read-only — the agent can never add or delete
+addresses, and your full address text never enters the model's context, only
+an opaque id). Mock catalog until you link your Swiggy account
 (`python -m app.swiggy_auth <user id>`, one-time phone+OTP; token lasts ~5
 days, no refresh — re-link on expiry). Live or mock, ordering stays
 structurally impossible for both services.
@@ -85,8 +87,9 @@ structurally impossible for both services.
   connection dropped, the finished reply still appears on the next
   reconciliation poll — nothing is lost, only the live typing effect is missed.
 - Swiggy results are mock dishes/items until you link your Swiggy account.
-- Instamart search needs a saved delivery address on your Swiggy account (the
-  agent looks it up, read-only — it never adds one for you).
+- Live search (Food and Instamart alike) needs at least one saved delivery
+  address on your Swiggy account (the agent looks it up, read-only — it never
+  adds one for you).
 - Nightly/dinner crons run in one shared timezone (`USER_TZ`) for all users.
 - Macro numbers for restaurant food are estimates — treated and labelled as such.
 - Exercise check-offs in the tracker are device-local; the agent reads your

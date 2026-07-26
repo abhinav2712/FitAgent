@@ -13,10 +13,12 @@ class Settings(BaseSettings):
     swiggy_instamart_mcp_url: str = "https://mcp.swiggy.com/im"  # Instamart MCP, streamable HTTP
     swiggy_mock: bool = True           # per-user OAuth tokens live on the users row
     user_tz: str = "Asia/Kolkata"      # worker cron timezone (shared; per-user tz is a v2 upgrade)
-    user_lat: float = 12.97            # Swiggy search fallback ONLY if a user never set their location
-    user_lng: float = 77.59            # in-app (see PUT /me/location); no city is hard-coded for real users
+    user_lat: float = 12.97            # legacy fallback — live Swiggy search is address-anchored
+    user_lng: float = 77.59            # (users.lat/lng from PUT /me/location remain for display/future)
 
     class Config:
         env_file = ".env"
+        extra = "ignore"  # .env legitimately holds vars we don't own (user notes,
+                          # other tools) — newer pydantic-settings errors on them otherwise
 
 settings = Settings()

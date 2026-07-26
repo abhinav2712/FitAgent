@@ -16,9 +16,10 @@ def me(user: dict = Depends(get_current_user)):
 @router.put("/me/location")
 def set_location(loc: LocationIn, db: Session = Depends(get_db),
                  user: dict = Depends(get_current_user)):
-    """Sets where Swiggy searches near — browser geolocation or a manual pin,
-    never a hard-coded default. Used by Food's lat/lng search and shown to the
-    user; Instamart resolves its own saved delivery address once linked."""
+    """Browser geolocation or a manual pin, never a hard-coded default.
+    Display + future use only: live Swiggy search (Food and Instamart) turned
+    out to be anchored to the account's saved delivery address, not lat/lng —
+    see agent/swiggy_mcp._resolve_address_id."""
     db.execute(text("""
         UPDATE users SET lat = :lat, lng = :lng, location_label = :label WHERE id = :u
     """), {"lat": loc.lat, "lng": loc.lng, "label": loc.label, "u": user["id"]})

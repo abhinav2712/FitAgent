@@ -8,9 +8,8 @@ import argparse
 import base64
 import hashlib
 import http.server
-import json
 import secrets
-import threading
+import time
 import webbrowser
 from urllib.parse import urlencode, urlparse, parse_qs
 
@@ -54,10 +53,13 @@ def _wait_for_code(state: str) -> str:
         def log_message(self, *a):  # keep the CLI output clean
             pass
     srv = http.server.HTTPServer(("localhost", 8765), Handler)
-    threading.Thread(target=srv.handle_request, daemon=True).start()
-    while "code" not in box:
-        pass
+    srv.timeout = 30  # per-request wait; the deadline below bounds the whole flow
+    deadline = time.time() + 600
+    while "code" not in box and time.time() < deadline:
+        srv.handle_request()  # blocks until a request or timeout — no busy spin
     srv.server_close()
+    if "code" not in box:
+        raise SystemExit("Timed out after 10 min waiting for the Swiggy login callback.")
     return box["code"]
 
 def main():

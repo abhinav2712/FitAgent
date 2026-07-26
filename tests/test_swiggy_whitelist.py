@@ -20,7 +20,6 @@ def test_known_dangerous_food_tools_are_blocked():
     these calls production Swiggy and must never pass the gate."""
     for tool in ("place_food_order", "update_food_cart", "get_food_cart",
                  "flush_food_cart", "apply_food_coupon", "fetch_food_coupons",
-                 "get_addresses",  # Food doesn't need it — search_menu takes lat/lng directly
                  "get_food_orders", "track_food_order"):
         with pytest.raises(SwiggyToolBlocked):
             _assert_allowed("food", tool)
@@ -35,17 +34,23 @@ def test_known_dangerous_instamart_tools_are_blocked():
             _assert_allowed("instamart", tool)
 
 def test_food_search_tools_pass_the_gate():
-    for tool in ("search_restaurants", "search_menu", "get_restaurant_menu"):
+    # get_addresses is read-only (view saved addresses) and required on BOTH
+    # services: live Food search_menu returns "addressId is required" — learned
+    # from production on 2026-07-26, contradicting the docs' lat/lng framing.
+    # Address MUTATION (create/delete) stays blocked everywhere.
+    for tool in ("search_restaurants", "search_menu", "get_restaurant_menu", "get_addresses"):
         _assert_allowed("food", tool)
 
 def test_instamart_search_tools_pass_the_gate():
-    # get_addresses is allowed HERE ONLY — Instamart's search_products needs a
-    # saved addressId to search at all; it is read-only (no create/delete).
     for tool in ("search_products", "get_addresses"):
         _assert_allowed("instamart", tool)
 
-def test_food_get_addresses_does_not_leak_from_instamart_whitelist():
-    """The two whitelists must stay independent: Instamart legitimately allows
-    get_addresses, but that must never make it pass on the Food gate."""
+def test_whitelists_stay_independent():
+    """A tool legitimately allowed on one service must never pass the other's
+    gate just by existing somewhere: Instamart's search_products is not a Food
+    tool, and Food's search tools are not Instamart tools."""
     with pytest.raises(SwiggyToolBlocked):
-        _assert_allowed("food", "get_addresses")
+        _assert_allowed("food", "search_products")
+    for tool in ("search_restaurants", "search_menu", "get_restaurant_menu"):
+        with pytest.raises(SwiggyToolBlocked):
+            _assert_allowed("instamart", tool)

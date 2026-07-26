@@ -76,13 +76,20 @@
    SWIGGY_MOCK=false.
 3. ✅ Done — dish/item macro estimation is guided in both prompts (SWIGGY and
    COMMENT); numbers are always labelled "est."
-4. ✅ Done — user-set location (`PUT /me/location`, browser geolocation from
-   the tracker's header pill) replaces any hard-coded city; both services
-   search near wherever the user actually pins. Instamart's `search_products`
-   additionally needs a saved delivery address, resolved read-only via
-   `get_addresses` — if the linked Swiggy account has none, the agent tells
-   the user to add one in the Swiggy app rather than creating one itself.
-5. Quality pass for a week: were the recommendations actually orderable, nearby, and macro-sane? Tune.
+4. ✅ Done, revised by production reality (2026-07-26): live searches on BOTH
+   services are anchored to the user's most-recent **saved Swiggy delivery
+   address**, resolved read-only via `get_addresses` (Food's `search_menu`
+   rejects calls without an addressId — the lat/lng framing was wrong). The
+   full address text never leaves `_resolve_address_id`; only the opaque id
+   reaches the LLM. If the linked account has no saved address, the agent
+   says so rather than creating one. The in-app location pin
+   (`PUT /me/location`) remains for display and future use, but no longer
+   drives Swiggy search.
+5. ✅ Verified live (2026-07-26, account linked): chat "what should I order
+   for dinner tonight?" → real HSR-Layout restaurants (Protein Chef, Grills
+   N Gains, Rolls On Wheels) with prices, est. macros, and reasons on the
+   picks card. Instamart returns real in-stock products with offer prices.
+6. Quality pass for a week: were the recommendations actually orderable, nearby, and macro-sane? Tune.
 
 **Definition of done:** on a day the cook doesn't come, the 6 PM message alone is enough to decide dinner.
 

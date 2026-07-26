@@ -12,12 +12,16 @@ Auth is OAuth 2.1 + PKCE (phone + OTP, browser) — per user, linked once via
 users row and is shared by both services. SWIGGY_MOCK=true serves realistic
 mock data so the whole flow works without a linked account.
 """
+import re
 from app.config import settings
 
-FOOD_ALLOWED_TOOLS = {"search_restaurants", "search_menu", "get_restaurant_menu"}
-# Instamart's search needs a saved delivery address, not raw coordinates —
-# get_addresses is READ-ONLY (views saved addresses; create/delete are not
-# whitelisted) and exists solely to resolve the addressId search_products needs.
+# Searches on BOTH services are anchored to a saved delivery address — live
+# Food search_menu returns "addressId is required" (learned from production;
+# the docs' lat/lng framing was wrong). get_addresses is READ-ONLY (views
+# saved addresses; create/delete are not whitelisted) and exists solely to
+# resolve that addressId.
+FOOD_ALLOWED_TOOLS = {"search_restaurants", "search_menu", "get_restaurant_menu",
+                      "get_addresses"}
 INSTAMART_ALLOWED_TOOLS = {"search_products", "get_addresses"}
 # NEVER add cart/order/checkout/coupon/create_address/delete_address tools
 # to either set. Whitelist, not blocklist.
@@ -116,35 +120,36 @@ async def _call_swiggy(user: dict, service: str, endpoint: str, tool: str, args:
     except Exception as e:  # 401/419 = expired session; surface, don't crash the run
         return f"Swiggy MCP error ({e}). If this mentions 401/419, the user must re-link via app.swiggy_auth."
 
+async def _resolve_address_id(user: dict, service: str, endpoint: str) -> str | None:
+    """Searches on both services are anchored to a saved delivery address.
+    get_addresses returns human-readable text ("1. [home] Name: full address
+    (ID: abc123)…"), sorted by last order — we take the most recent. PRIVACY:
+    the listing (full home addresses) never leaves this function; only the
+    opaque id does, so no address ever enters the LLM context. We never call
+    create_address — if there's no saved address, the caller says so."""
+    out = await _call_swiggy(user, service, endpoint, "get_addresses", {})
+    m = re.search(r"\(ID:\s*([A-Za-z0-9_-]+)\)", out)
+    return m.group(1) if m else None
+
+_NO_ADDRESS = ("No saved delivery address on this Swiggy account — add one in "
+               "the Swiggy app first, then ask again.")
+
 async def _search_food_real(query: str, user: dict) -> dict:
-    """Dish-level search near the user. Swiggy's menu data has no macros —
-    the agent estimates them and must label numbers 'est.'."""
-    out = await _call_swiggy(user, "food", settings.swiggy_mcp_url, "search_menu", {
-        "query": query,
-        "lat": float(user.get("lat") or settings.user_lat),
-        "lng": float(user.get("lng") or settings.user_lng),
-    })
+    """Dish search anchored to the user's most-recent delivery address.
+    Swiggy's menu data has no macros — the agent estimates them and must
+    label numbers 'est.'."""
+    address_id = await _resolve_address_id(user, "food", settings.swiggy_mcp_url)
+    if not address_id:
+        return {"source": "swiggy_live", "results": _NO_ADDRESS}
+    out = await _call_swiggy(user, "food", settings.swiggy_mcp_url, "search_menu",
+                             {"query": query, "addressId": address_id})
     return {"source": "swiggy_live", "results": out}
 
 async def _search_instamart_real(query: str, user: dict) -> dict:
-    """Instamart needs a saved delivery addressId, not lat/lng — resolve the
-    user's first saved address (read-only lookup), then search products
-    against it. If they've never saved a Swiggy address, we say so instead
-    of guessing; we never call create_address (that's a write, out of scope)."""
-    addr_json = await _call_swiggy(user, "instamart", settings.swiggy_instamart_mcp_url,
-                                   "get_addresses", {})
-    if "Swiggy account not linked" in addr_json or "Swiggy MCP error" in addr_json:
-        return {"source": "swiggy_live", "results": addr_json}
-    import json as _json
-    try:
-        addresses = _json.loads(addr_json)
-        address_id = (addresses[0] or {}).get("id") if addresses else None
-    except (ValueError, IndexError, AttributeError, TypeError):
-        address_id = None
+    """Instamart product search, same address anchoring as Food."""
+    address_id = await _resolve_address_id(user, "instamart", settings.swiggy_instamart_mcp_url)
     if not address_id:
-        return {"source": "swiggy_live",
-                "results": "No saved Instamart delivery address on this Swiggy account. "
-                           "Add one address in the Swiggy app first, then ask again."}
+        return {"source": "swiggy_live", "results": _NO_ADDRESS}
     out = await _call_swiggy(user, "instamart", settings.swiggy_instamart_mcp_url,
                              "search_products", {"query": query, "addressId": address_id})
     return {"source": "swiggy_live", "results": out}
