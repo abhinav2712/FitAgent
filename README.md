@@ -22,7 +22,9 @@ and recommends macro-fitting dishes from **Swiggy Food & Instamart** — *it rec
 <p align="center"><img src="docs/screenshot.png" width="720" alt="FitAgent tracker"></p>
 -->
 
-**📹Demo:** https://drive.google.com/file/d/1AvRd6IpKSmJjPakAlFD6Kvvm0u6tPYBr/view
+**📹 Demo:** https://drive.google.com/file/d/1AvRd6IpKSmJjPakAlFD6Kvvm0u6tPYBr/view
+
+**📖 Engineering deep-dive:** [**Case Study**](docs/CASE_STUDY.md) — architecture, system design, tech-stack choices, and the reasoning behind every major decision.
 
 ---
 
@@ -192,6 +194,6 @@ Covers the calorie/protein floors, the "seed plan must pass its own guardrails" 
 
 ## 📚 Docs
 
-[Agent Capabilities](docs/CAPABILITIES.md) · [Architecture](docs/ARCHITECTURE.md) · [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) · [Coding Guidelines](docs/CODING_GUIDELINES.md) · [Future Features](docs/FUTURE_FEATURES.md) · [iPhone Shortcut Setup](shortcuts/SHORTCUT_SETUP.md) · [CLAUDE.md](CLAUDE.md)
+[Engineering Case Study](docs/CASE_STUDY.md) · [Agent Capabilities](docs/CAPABILITIES.md) · [Architecture](docs/ARCHITECTURE.md) · [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) · [Coding Guidelines](docs/CODING_GUIDELINES.md) · [Future Features](docs/FUTURE_FEATURES.md) · [iPhone Shortcut Setup](shortcuts/SHORTCUT_SETUP.md) · [CLAUDE.md](CLAUDE.md)
 
 <div align="center"><sub>Built on the Swiggy Builders Club platform · recommends, never orders.</sub></div>
